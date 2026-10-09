@@ -1,0 +1,70 @@
+/* Variables CSS pour les couleurs MedLink */
+:root {
+    /* Primary */
+    --color-primary: #0B1B3D;
+    --color-primary-dark: #00020a;
+    --color-primary-light: #162E5B;
+
+    /* Secondary */
+    --color-secondary: #485e8d;
+    --color-secondary-container: #b3c9ff;
+
+    /* Surface */
+    --color-surface: #f8f9ff;
+    --color-surface-low: #eff4ff;
+    --color-surface-container: #e5eeff;
+    --color-surface-high: #dce9ff;
+    --color-surface-highest: #d3e4fe;
+
+    /* On Surface */
+    --color-on-surface: #0b1c30;
+    --color-on-variant: #45464e;
+
+    /* Outline */
+    --color-outline: #75777f;
+    --color-outline-variant: #c5c6cf;
+
+    /* Error */
+    --color-error: #ba1a1a;
+    --color-error-container: #ffdad6;
+
+    /* Success */
+    --color-success: #0d7a4f;
+    --color-success-container: #d1fae5;
+
+    /* Warning */
+    --color-warning: #b45309;
+    --color-warning-container: #fef3c7;
+}
+
+/* Classes utilitaires pour utiliser les couleurs */
+.bg-primary { background-color: var(--color-primary); }
+.bg-primary-dark { background-color: var(--color-primary-dark); }
+.bg-primary-light { background-color: var(--color-primary-light); }
+.bg-secondary { background-color: var(--color-secondary); }
+.bg-secondary-container { background-color: var(--color-secondary-container); }
+.bg-surface { background-color: var(--color-surface); }
+.bg-surface-low { background-color: var(--color-surface-low); }
+.bg-surface-container { background-color: var(--color-surface-container); }
+.bg-surface-high { background-color: var(--color-surface-high); }
+.bg-surface-highest { background-color: var(--color-surface-highest); }
+.bg-error { background-color: var(--color-error); }
+.bg-error-container { background-color: var(--color-error-container); }
+.bg-success { background-color: var(--color-success); }
+.bg-success-container { background-color: var(--color-success-container); }
+.bg-warning { background-color: var(--color-warning); }
+.bg-warning-container { background-color: var(--color-warning-container); }
+
+.text-primary { color: var(--color-primary); }
+.text-primary-dark { color: var(--color-primary-dark); }
+.text-primary-light { color: var(--color-primary-light); }
+.text-secondary { color: var(--color-secondary); }
+.text-on-surface { color: var(--color-on-surface); }
+.text-on-variant { color: var(--color-on-variant); }
+.text-error { color: var(--color-error); }
+.text-success { color: var(--color-success); }
+.text-warning { color: var(--color-warning); }
+
+.border-primary { border-color: var(--color-primary); }
+.border-outline { border-color: var(--color-outline); }
+.border-outline-variant { border-color: var(--color-outline-variant); }

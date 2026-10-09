@@ -1,48 +1,52 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { useAuth } from './context/AuthContext';
-import Layout from './components/Layout';
-import Login from './pages/Login';
-import Dashboard from './pages/Dashboard';
-import Appointments from './pages/Appointments';
-import Records from './pages/Records';
-import Results from './pages/Results';
-import BookAppointment from './pages/BookAppointment';
+import { useAuth } from './shared/context/AuthContext';
+import Layout from './shared/components/Layout';
 
+// 1. Import de la Landing Page et du Login
+import Landing from './shared/pages/Landing';
+import Login from './modules/auth/pages/Login';
+
+// 2. Import des pages de l'application (Dashboard, etc.)
+import Dashboard from './shared/pages/Dashboard';
+import Appointments from './modules/patient/pages/Appointments';
+import BookAppointment from './modules/patient/pages/BookAppointment';
+import Records from './modules/patient/pages/Records';
+import Results from './modules/patient/pages/Results';
+
+// Composant de protection des routes
 function PrivateRoute({ children }) {
-  const { user, loading } = useAuth();
-  if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-surface">
-        <div className="text-center">
-          <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-          <p className="mt-3 text-sm text-on-variant">Chargement…</p>
-        </div>
-      </div>
-    );
-  }
-  if (!user) return <Navigate to="/login" replace />;
-  return children;
+    const { user, loading } = useAuth();
+    if (loading) {
+        return (
+            <div className="flex min-h-screen items-center justify-center bg-surface">
+                <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+            </div>
+        );
+    }
+    if (!user) return <Navigate to="/login" replace />;
+    return children;
 }
 
 export default function App() {
-  return (
-    <Routes>
-      <Route path="/login" element={<Login />} />
-      <Route
-        path="/"
-        element={
-          <PrivateRoute>
-            <Layout />
-          </PrivateRoute>
-        }
-      >
-        <Route index element={<Dashboard />} />
-        <Route path="appointments" element={<Appointments />} />
-        <Route path="book" element={<BookAppointment />} />
-        <Route path="records" element={<Records />} />
-        <Route path="results" element={<Results />} />
-      </Route>
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
-  );
+    return (
+        <Routes>
+            {/* ✅ Route publique : Page d'accueil */}
+            <Route path="/" element={<Landing />} />
+
+            {/* ✅ Route publique : Page de connexion */}
+            <Route path="/login" element={<Login />} />
+
+            {/* ✅ Routes protégées : Application (accessible uniquement si connecté) */}
+            <Route path="/app" element={<PrivateRoute><Layout /></PrivateRoute>}>
+                <Route index element={<Dashboard />} />
+                <Route path="appointments" element={<Appointments />} />
+                <Route path="book" element={<BookAppointment />} />
+                <Route path="records" element={<Records />} />
+                <Route path="results" element={<Results />} />
+            </Route>
+
+            {/* Redirection des pages inexistantes vers l'accueil */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+    );
 }

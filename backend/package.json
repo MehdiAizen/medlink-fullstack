@@ -1,4 +1,5 @@
 {
+  "type": "module",
   "name": "medlink-backend",
   "version": "1.0.0",
   "description": "MedLink API - Node.js + Express + PostgreSQL",
