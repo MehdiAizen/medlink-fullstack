@@ -5,7 +5,7 @@ async function seed() {
   console.log('🌱 Début du seeding de la base MedLink...');
 
   try {
-    // 1. Création des tables (Idempotent)
+    // 1. Création des tables
     await pool.query(`
       CREATE TABLE IF NOT EXISTS users (
                                          id SERIAL PRIMARY KEY,
@@ -163,7 +163,7 @@ async function seed() {
         ($2, 'VIEW_RECORD', 'Dossier médical #1', '192.168.1.10')`,
         [patient1, doctor1]
     );
-
+ //démo (Mot de passe : password123
     console.log('✅ Seed terminé avec succès !\n');
     console.log('🔑 Comptes de démo (Mot de passe : password123) :');
     console.log('  🔒 Admin     : admin@medlink.tn');
