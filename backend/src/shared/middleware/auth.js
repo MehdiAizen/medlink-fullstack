@@ -29,7 +29,7 @@ export function authenticate(req, res, next) {
 /**
  * Middleware de contrôle d'accès par rôle (RBAC - US-39)
  * Vérifie que l'utilisateur a le rôle requis pour accéder à la route
- * Exemple : requireRole('ADMIN', 'PRACTITIONER')
+ * Exemple : requireRole('admin', 'practitioner')
  */
 export function requireRole(...roles) {
   return (req, res, next) => {
