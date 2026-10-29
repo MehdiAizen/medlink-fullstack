@@ -25,13 +25,15 @@ export default function Appointments() {
   const [error, setError] = useState('');
 
   const load = () => {
-    setLoading(true);
-    api.appointments
-      .list()
-      .then(setList)
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
-  };
+  setLoading(true);
+  setError('');
+
+  api.patient.appointments
+    .list()
+    .then(setList)
+    .catch((err) => setError(err.message))
+    .finally(() => setLoading(false));
+};
 
   useEffect(() => {
     load();
@@ -46,7 +48,7 @@ export default function Appointments() {
     }
   };
 
-  const isDoctor = user?.role === 'doctor';
+  const isDoctor = user?.role === 'practitioner';
 
   if (loading) {
     return (
@@ -99,7 +101,7 @@ export default function Appointments() {
                 <tr key={a.id} className="hover:bg-surface-low/50">
                   <td className="px-5 py-3.5">
                     <p className="font-medium text-primary">
-                      {isDoctor ? a.patient_name : a.doctor_name}
+                      {isDoctor ? a.patient_name : a.practitioner_name}
                     </p>
                     {!isDoctor && a.specialty && (
                       <p className="text-xs text-on-variant">{a.specialty}</p>
