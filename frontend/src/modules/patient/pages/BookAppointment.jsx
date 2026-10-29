@@ -17,7 +17,7 @@ export default function BookAppointment() {
   const [success, setSuccess] = useState(false);
 
   useEffect(() => {
-    api.appointments.doctors().then(setDoctors).catch((err) => setError(err.message));
+    api.patient.practitioners().then(setDoctors).catch((err) => setError(err.message));
   }, []);
 
   const handleChange = (e) => {
@@ -29,7 +29,7 @@ export default function BookAppointment() {
     setError('');
     setLoading(true);
     try {
-      await api.appointments.create({
+      await api.patient.appointments.create({
         ...form,
         doctor_id: parseInt(form.doctor_id, 10),
       });

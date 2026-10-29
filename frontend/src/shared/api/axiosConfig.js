@@ -1,12 +1,12 @@
-const API_BASE = '/api';
+const API_BASE = "/api";
 
 function getToken() {
-  return localStorage.getItem('medlink_token');
+  return localStorage.getItem("medlink_token");
 }
 
 async function request(path, options = {}) {
   const headers = {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
     ...options.headers,
   };
   const token = getToken();
@@ -25,35 +25,52 @@ export const api = {
   // --- Module AUTH ---
   auth: {
     login: (email, password) =>
-        request('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
-    me: () => request('/auth/me'),
+      request("/auth/login", {
+        method: "POST",
+        body: JSON.stringify({ email, password }),
+      }),
+    me: () => request("/auth/me"),
   },
 
   // --- Module PATIENT ---
   patient: {
+    practitioners: () => request("/patient/practitioners"),
+
     appointments: {
-      list: () => request('/patient/appointments'),
-      create: (data) => request('/patient/appointments', { method: 'POST', body: JSON.stringify(data) }),
+      list: () => request("/patient/appointments"),
+      create: (data) =>
+        request("/patient/appointments", {
+          method: "POST",
+          body: JSON.stringify(data),
+        }),
     },
+
     records: {
-      list: () => request('/patient/records'),
-      results: () => request('/patient/records/results'),
+      list: () => request("/patient/records"),
+      results: () => request("/patient/records/results"),
     },
   },
 
   // --- Module PRACTITIONER ---
   practitioner: {
     appointments: {
-      list: () => request('/practitioner/appointments'),
+      list: () => request("/practitioner/appointments"),
       updateStatus: (id, status) =>
-          request(`/practitioner/appointments/${id}`, { method: 'PATCH', body: JSON.stringify({ status }) }),
+        request(`/practitioner/appointments/${id}`, {
+          method: "PATCH",
+          body: JSON.stringify({ status }),
+        }),
     },
     records: {
-      list: () => request('/practitioner/records'),
-      create: (data) => request('/practitioner/records', { method: 'POST', body: JSON.stringify(data) }),
+      list: () => request("/practitioner/records"),
+      create: (data) =>
+        request("/practitioner/records", {
+          method: "POST",
+          body: JSON.stringify(data),
+        }),
     },
   },
 
   // --- Fallback Dashboard ---
-  dashboard: () => request('/dashboard'),
+  dashboard: () => request("/dashboard"),
 };
