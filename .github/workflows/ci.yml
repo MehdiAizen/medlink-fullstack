@@ -1,4 +1,3 @@
-
 name: MedLink CI/CD Pipeline
 
 on:
@@ -10,29 +9,24 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
-
     strategy:
       matrix:
-        node-version: [18.x] # Utilise Node 18
+        node-version: [18.x]
 
     steps:
       - name: Checkout du code
         uses: actions/checkout@v3
 
-      - name: Utilisation de Node.js ${{ matrix.node-version }}
+      # ✅ CORRECTION : Pas de "cache: npm" ici, car il n'y a pas de lockfile à la racine
+      - name: Setup Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'npm'
 
       # --- BACKEND ---
       - name: Installation des dépendances Backend
         working-directory: ./backend
         run: npm ci
-
-      - name: Vérification de la syntaxe / Build Backend (si script défini)
-        working-directory: ./backend
-        run: npm run build --if-present || echo "Pas de script build, passage à la suite"
 
       # --- FRONTEND ---
       - name: Installation des dépendances Frontend
