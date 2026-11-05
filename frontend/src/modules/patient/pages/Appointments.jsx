@@ -24,10 +24,17 @@ export default function Appointments() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  const isPractitioner = user?.role === 'practitioner';
+
   const load = () => {
     setLoading(true);
-    api.appointments
-      .list()
+    setError('');
+
+    const fetchList = isPractitioner
+      ? api.practitioner.appointments.list()
+      : api.patient.appointments.list();
+
+    fetchList
       .then(setList)
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
@@ -35,18 +42,16 @@ export default function Appointments() {
 
   useEffect(() => {
     load();
-  }, []);
+  }, [user?.role]);
 
   const updateStatus = async (id, status) => {
     try {
-      await api.appointments.updateStatus(id, status);
+      await api.practitioner.appointments.updateStatus(id, status);
       load();
     } catch (err) {
       alert(err.message);
     }
   };
-
-  const isDoctor = user?.role === 'practitioner';
 
   if (loading) {
     return (
@@ -64,10 +69,10 @@ export default function Appointments() {
     <div className="space-y-6">
       <div>
         <h2 className="font-display text-2xl font-bold text-primary">
-          {isDoctor ? 'Agenda médical' : 'Mes rendez-vous'}
+          {isPractitioner ? 'Agenda médical' : 'Mes rendez-vous'}
         </h2>
         <p className="mt-1 text-sm text-on-variant">
-          {isDoctor
+          {isPractitioner
             ? 'Gérez les consultations de vos patients'
             : 'Consultez et suivez vos rendez-vous'}
         </p>
@@ -83,13 +88,14 @@ export default function Appointments() {
             <thead className="border-b border-outline-variant/40 bg-surface-low">
               <tr>
                 <th className="px-5 py-3 font-semibold text-on-variant">
-                  {isDoctor ? 'Patient' : 'Médecin'}
+                  {isPractitioner ? 'Patient' : 'Médecin'}
                 </th>
+                <th className="px-5 py-3 font-semibold text-on-variant">Clinique</th>
                 <th className="px-5 py-3 font-semibold text-on-variant">Date</th>
                 <th className="px-5 py-3 font-semibold text-on-variant">Heure</th>
                 <th className="px-5 py-3 font-semibold text-on-variant">Motif</th>
                 <th className="px-5 py-3 font-semibold text-on-variant">Statut</th>
-                {isDoctor && (
+                {isPractitioner && (
                   <th className="px-5 py-3 font-semibold text-on-variant">Actions</th>
                 )}
               </tr>
@@ -99,11 +105,14 @@ export default function Appointments() {
                 <tr key={a.id} className="hover:bg-surface-low/50">
                   <td className="px-5 py-3.5">
                     <p className="font-medium text-primary">
-                      {isDoctor ? a.patient_name : a.doctor_name}
+                      {isPractitioner ? a.patient_name : a.doctor_name || a.practitioner_name}
                     </p>
-                    {!isDoctor && a.specialty && (
+                    {!isPractitioner && a.specialty && (
                       <p className="text-xs text-on-variant">{a.specialty}</p>
                     )}
+                  </td>
+                  <td className="px-5 py-3.5 text-on-variant">
+                    {a.clinique_nom || a.clinique_ville || '—'}
                   </td>
                   <td className="px-5 py-3.5">
                     {new Date(a.appointment_date).toLocaleDateString('fr-FR')}
@@ -111,7 +120,7 @@ export default function Appointments() {
                   <td className="px-5 py-3.5">{a.appointment_time?.slice(0, 5)}</td>
                   <td className="px-5 py-3.5 text-on-variant">{a.reason || a.type}</td>
                   <td className="px-5 py-3.5">{statusBadge(a.status)}</td>
-                  {isDoctor && (
+                  {isPractitioner && (
                     <td className="px-5 py-3.5">
                       <div className="flex gap-2">
                         {a.status === 'pending' && (

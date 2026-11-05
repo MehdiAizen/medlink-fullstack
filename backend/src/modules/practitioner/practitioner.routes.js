@@ -1,60 +1,42 @@
 import { Router } from 'express';
+import { authenticate, requireRole } from '../../shared/middleware/auth.js';
+import { getAppointments, patchAppointmentStatus, getDisponibilites,
+  postDisponibilite,
+  removeDisponibilite, searchPatients,
+  getPatientRecords, postMedicalRecord,
+  postLabResult,
+  getPatientResults,} from './practitioner.controller.js';
 
-// backend/routes/dashboard.js (ou dans ton fichier de routes principal)
-import express from 'express';
-import pool from '../../shared/utils/db.js'; // Adapte le chemin vers ton fichier db.js
-// import { authenticateToken, requireRole } from '../middleware/auth.js'; // Décommente si tu as ces middlewares
+const router = Router();
 
-const router = express.Router();
+// GET /api/practitioner/appointments — Agenda du praticien (US-19)
+router.get(
+  '/appointments',
+  authenticate,
+  requireRole('practitioner'),
+  getAppointments
+);
 
-// Route spécifique pour le tableau de bord PRATICIEN
-router.get('/dashboard/practitioner', async (req, res) => {
-  try {
-    // TODO: Décommente ces lignes quand ton middleware d'auth est prêt
-    // authenticateToken(req, res, () => {});
-    // requireRole('practitioner')(req, res, () => {});
+// PATCH /api/practitioner/appointments/:id — Confirmer / Annuler / Terminer (US-19, US-20)
+router.patch(
+  '/appointments/:id',
+  authenticate,
+  requireRole('practitioner'),
+  patchAppointmentStatus
+);
 
-    const practitionerId = req.user?.id || 4; // Fallback sur l'ID 4 (Dr. Karim) si le JWT n'est pas encore lu
+// --- Disponibilités (US-18, US-21) ---
+router.get('/disponibilites', authenticate, requireRole('practitioner'), getDisponibilites);
+router.post('/disponibilites', authenticate, requireRole('practitioner'), postDisponibilite);
+router.delete('/disponibilites/:id', authenticate, requireRole('practitioner'), removeDisponibilite);
 
-    // 1. Compter les rendez-vous du jour pour ce praticien (US-19)
-    const appointmentsToday = await pool.query(
-      `SELECT COUNT(*) FROM appointments 
-       WHERE practitioner_id = $1 AND appointment_date = CURRENT_DATE`,
-      [practitionerId]
-    );
+// --- Patients & dossiers (US-22, US-23, US-47) ---
+router.get('/patients', authenticate, requireRole('practitioner'), searchPatients);
+router.get('/patients/:id/records', authenticate, requireRole('practitioner'), getPatientRecords);
+router.get('/patients/:id/results', authenticate, requireRole('practitioner'), getPatientResults);
 
-    // 2. Compter les comptes-rendus en attente (exemple)
-    const pendingReports = await pool.query(
-      `SELECT COUNT(*) FROM medical_records 
-       WHERE practitioner_id = $1 AND record_date = CURRENT_DATE`,
-      [practitionerId]
-    );
-
-    // 3. Récupérer les 3 prochains rendez-vous pour l'affichage
-    const nextAppointments = await pool.query(
-      `SELECT a.appointment_date, a.appointment_time, a.status, u.full_name as patient_name, c.ville as clinic_city
-       FROM appointments a
-       JOIN users u ON a.patient_id = u.id
-       JOIN cliniques c ON a.clinique_id = c.id
-       WHERE a.practitioner_id = $1 AND a.appointment_date >= CURRENT_DATE
-       ORDER BY a.appointment_date ASC, a.appointment_time ASC
-       LIMIT 3`,
-      [practitionerId]
-    );
-
-    res.json({
-      success: true,
-      data: {
-        appointmentsToday: parseInt(appointmentsToday.rows[0].count),
-        pendingReports: parseInt(pendingReports.rows[0].count),
-        nextAppointments: nextAppointments.rows
-      }
-    });
-
-  } catch (error) {
-    console.error("❌ Erreur dans le dashboard praticien:", error);
-    res.status(500).json({ success: false, message: "Erreur interne du serveur" });
-  }
-});
+// --- Comptes-rendus & résultats (US-24, US-25, US-26) ---
+router.post('/records', authenticate, requireRole('practitioner'), postMedicalRecord);
+router.post('/results', authenticate, requireRole('practitioner'), postLabResult);
 
 export default router;

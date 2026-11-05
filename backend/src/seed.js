@@ -86,7 +86,26 @@ async function seed() {
         date_envoi TIMESTAMPTZ DEFAULT NOW(),
         statut VARCHAR(20) DEFAULT 'en_attente'
         );
-    `);
+
+      CREATE TABLE IF NOT EXISTS disponibilites (
+        id SERIAL PRIMARY KEY,
+        practitioner_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        clinique_id INTEGER NOT NULL REFERENCES cliniques(id) ON DELETE CASCADE,
+        date_debut DATE NOT NULL,
+        date_fin DATE NOT NULL,
+        heure_debut TIME NOT NULL,
+        heure_fin TIME NOT NULL,
+        type VARCHAR(20) NOT NULL DEFAULT 'disponible'
+        CHECK (type IN ('disponible', 'bloque', 'absence')),
+        motif TEXT,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        CONSTRAINT chk_dates CHECK (date_fin >= date_debut),
+        CONSTRAINT chk_heures CHECK (heure_fin > heure_debut)
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_disponibilites_practitioner
+        ON disponibilites (practitioner_id, date_debut, date_fin);
+        `);
 
     const hash = await bcrypt.hash('password123', 10);
 
@@ -95,16 +114,17 @@ async function seed() {
     console.log('🧹 Tables vidées.');
 
     // 3. Insertion des Cliniques (US-19, US-29, US-31)
-    const cliniques = await pool.query(
-        `INSERT INTO cliniques (nom, ville, adresse, telephone) VALUES
-                                                                  ('Clinique El Amen', 'Sousse', 'Avenue Habib Bourguiba, Sousse', '+216 73 111 111'),
-                                                                  ('Clinique Taoufik', 'Sfax', 'Route de Tunis, Sfax', '+216 74 222 222'),
-                                                                  ('Clinique Pasteur', 'Tunis', 'Avenue Mohamed V, Tunis', '+216 71 333 333')
-          RETURNING id, nom, ville`
-    );
-    const cliniqueSousse = cliniques.rows[0].id;
-    const cliniqueSfax = cliniques.rows[1].id;
-    const cliniqueTunis = cliniques.rows[2].id;
+    const cliniques = await pool.query(`
+  INSERT INTO cliniques (nom, ville, adresse, telephone) VALUES
+    ('Clinique El Amen', 'Sousse', 'Avenue Habib Bourguiba, Sousse', '+216 73 111 111'),
+    ('Clinique Taoufik', 'Sfax', 'Route de Tunis, Sfax', '+216 74 222 222'),
+    ('Clinique Pasteur', 'Tunis', 'Avenue Mohamed V, Tunis', '+216 71 333 333')
+  RETURNING id, nom, ville
+`);
+
+const cliniqueSousse = cliniques.rows[0].id;
+const cliniqueSfax = cliniques.rows[1].id;
+const cliniqueTunis = cliniques.rows[2].id;
 
     // 4. Insertion des Utilisateurs
     const users = await pool.query(

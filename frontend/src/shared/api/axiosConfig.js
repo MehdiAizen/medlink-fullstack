@@ -64,11 +64,42 @@ const practitioner = {
   appointments: {
     list: () => request('/practitioner/appointments'),
     updateStatus: (id, status) =>
-        request(`/practitioner/appointments/${id}`, { method: 'PATCH', body: JSON.stringify({ status }) }),
+      request(`/practitioner/appointments/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status }),
+      }),
+  },
+  disponibilites: {
+    list: () => request('/practitioner/disponibilites'),
+    create: (data) =>
+      request('/practitioner/disponibilites', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    remove: (id) =>
+      request(`/practitioner/disponibilites/${id}`, { method: 'DELETE' }),
+  },
+  patients: {
+    search: (q = '') =>
+      request(`/practitioner/patients${q ? `?q=${encodeURIComponent(q)}` : ''}`),
+    records: (id) => request(`/practitioner/patients/${id}/records`),
+    results: (id) => request(`/practitioner/patients/${id}/results`),
   },
   records: {
-    list: () => request('/practitioner/records'),
-    create: (data) => request('/practitioner/records', { method: 'POST', body: JSON.stringify(data) }),
+    // liste globale optionnelle (sinon on passe par patients.records)
+    list: () => request('/practitioner/patients'), // ou à adapter plus tard
+    create: (data) =>
+      request('/practitioner/records', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+  },
+  results: {
+    create: (data) =>
+      request('/practitioner/results', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
   },
 };
 
@@ -88,6 +119,9 @@ export const api = {
   records: {
     list: byRole({ patient: patient.records.list, practitioner: practitioner.records.list }),
     results: byRole({ patient: patient.records.results }),
+    create: byRole({
+      practitioner: practitioner.records.create,
+    }),
   },
 
   // --- Fallback Dashboard ---
