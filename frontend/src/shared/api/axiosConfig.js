@@ -43,7 +43,17 @@ export const api = {
           method: "POST",
           body: JSON.stringify(data),
         }),
+
+      cancel: (id) =>
+        request(`/patient/appointments/${id}/cancel`, {
+          method: "PATCH",
+        }),
     },
+
+    cancel: (id) =>
+      request(`/patient/appointments/${id}/cancel`, {
+        method: "PATCH",
+      }),
 
     records: {
       list: () => request("/patient/records"),

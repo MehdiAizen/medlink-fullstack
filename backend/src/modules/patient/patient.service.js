@@ -151,3 +151,40 @@ export async function bookAppointment(patientId, data) {
     client.release();
   }
 }
+
+export async function cancelAppointment(patientId, appointmentId) {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+
+    // Anti-IDOR : on vérifie que le RDV appartient bien au patient
+    const check = await client.query(
+      `SELECT id, status FROM appointments 
+       WHERE id = $1 AND patient_id = $2 FOR UPDATE`,
+      [appointmentId, patientId]
+    );
+
+    if (check.rows.length === 0) {
+      throw new Error("Rendez-vous introuvable ou non autorisé");
+    }
+
+    if (check.rows[0].status === "cancelled") {
+      throw new Error("Ce rendez-vous est déjà annulé");
+    }
+
+    const result = await client.query(
+      `UPDATE appointments 
+       SET status = 'cancelled', updated_at = NOW() 
+       WHERE id = $1 RETURNING *`,
+      [appointmentId]
+    );
+
+    await client.query("COMMIT");
+    return result.rows[0];
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
+}

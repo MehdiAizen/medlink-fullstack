@@ -25,15 +25,15 @@ export default function Appointments() {
   const [error, setError] = useState('');
 
   const load = () => {
-  setLoading(true);
-  setError('');
+    setLoading(true);
+    setError('');
 
-  api.patient.appointments
-    .list()
-    .then(setList)
-    .catch((err) => setError(err.message))
-    .finally(() => setLoading(false));
-};
+    api.patient.appointments
+      .list()
+      .then(setList)
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false));
+  };
 
   useEffect(() => {
     load();
@@ -41,8 +41,19 @@ export default function Appointments() {
 
   const updateStatus = async (id, status) => {
     try {
-      await api.appointments.updateStatus(id, status);
+      await api.practitioner.appointments.updateStatus(id, status);
       load();
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  const cancelAppointment = async (id) => {
+    if (!window.confirm("Voulez-vous vraiment annuler ce rendez-vous ?")) return;
+    
+    try {
+      await api.patient.appointments.cancel(id);
+      load(); // Recharge la liste pour voir le statut mis à jour
     } catch (err) {
       alert(err.message);
     }
@@ -91,9 +102,7 @@ export default function Appointments() {
                 <th className="px-5 py-3 font-semibold text-on-variant">Heure</th>
                 <th className="px-5 py-3 font-semibold text-on-variant">Motif</th>
                 <th className="px-5 py-3 font-semibold text-on-variant">Statut</th>
-                {isDoctor && (
-                  <th className="px-5 py-3 font-semibold text-on-variant">Actions</th>
-                )}
+                <th className="px-5 py-3 font-semibold text-on-variant">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-outline-variant/30">
@@ -113,6 +122,8 @@ export default function Appointments() {
                   <td className="px-5 py-3.5">{a.appointment_time?.slice(0, 5)}</td>
                   <td className="px-5 py-3.5 text-on-variant">{a.reason || a.type}</td>
                   <td className="px-5 py-3.5">{statusBadge(a.status)}</td>
+                  
+                  {/* Actions pour le Médecin */}
                   {isDoctor && (
                     <td className="px-5 py-3.5">
                       <div className="flex gap-2">
@@ -141,6 +152,20 @@ export default function Appointments() {
                           </button>
                         )}
                       </div>
+                    </td>
+                  )}
+
+                  {/* Actions pour le Patient */}
+                  {!isDoctor && (
+                    <td className="px-5 py-3.5">
+                      {(a.status === 'pending' || a.status === 'confirmed') && (
+                        <button
+                          onClick={() => cancelAppointment(a.id)}
+                          className="rounded-md bg-error-container px-2.5 py-1 text-xs font-semibold text-error hover:opacity-80"
+                        >
+                          Annuler
+                        </button>
+                      )}
                     </td>
                   )}
                 </tr>

@@ -4,6 +4,7 @@ import {
   getPractitioners,
   getAppointments,
   createAppointment,
+  cancelAppointment,
 } from "./patient.controller.js";
 
 const router = Router();
@@ -92,5 +93,30 @@ router.get("/appointments", getAppointments);
  *         description: Créneau déjà réservé
  */
 router.post("/appointments", createAppointment);
+
+/**
+ * @openapi
+ * /api/patient/appointments/{id}/cancel:
+ *   patch:
+ *     summary: Annuler un rendez-vous
+ *     tags: [Patient - M2]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID du rendez-vous
+ *     responses:
+ *       200:
+ *         description: Rendez-vous annulé
+ *       400:
+ *         description: Impossible d'annuler (déjà annulé)
+ *       404:
+ *         description: Rendez-vous introuvable
+ */
+router.patch("/appointments/:id/cancel", cancelAppointment);
 
 export default router;

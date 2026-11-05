@@ -2,6 +2,7 @@ import {
   listPractitioners,
   listPatientAppointments,
   bookAppointment,
+  cancelAppointment as cancelAppointmentService,
 } from "./patient.service.js";
 
 export async function getPractitioners(req, res) {
@@ -50,5 +51,20 @@ export async function createAppointment(req, res) {
 
     console.error("Erreur lors de la réservation :", error);
     res.status(500).json({ error: "Impossible de créer le rendez-vous" });
+  }
+}
+
+export async function cancelAppointment(req, res) {
+  try {
+    const appointmentId = parseInt(req.params.id, 10);
+    if (isNaN(appointmentId)) {
+      return res.status(400).json({ error: "ID invalide" });
+    }
+
+    const updated = await cancelAppointmentService(req.user.id, appointmentId);
+    res.json({ message: "Rendez-vous annulé", appointment: updated });
+  } catch (error) {
+    const status = error.message.includes("introuvable") ? 404 : 400;
+    res.status(status).json({ error: error.message });
   }
 }
