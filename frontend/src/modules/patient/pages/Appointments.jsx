@@ -46,7 +46,7 @@ export default function Appointments() {
     }
   };
 
-  const isDoctor = user?.role === 'doctor';
+  const isDoctor = user?.role === 'practitioner';
 
   if (loading) {
     return (
