@@ -48,6 +48,12 @@ export const api = {
         request(`/patient/appointments/${id}/cancel`, {
           method: "PATCH",
         }),
+
+      reschedule: (id, data) =>
+        request(`/patient/appointments/${id}/reschedule`, {
+          method: "PATCH",
+          body: JSON.stringify(data),
+        }),
     },
 
     cancel: (id) =>

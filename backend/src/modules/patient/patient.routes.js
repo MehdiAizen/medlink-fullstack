@@ -5,6 +5,7 @@ import {
   getAppointments,
   createAppointment,
   cancelAppointment,
+  rescheduleAppointment,
 } from "./patient.controller.js";
 
 const router = Router();
@@ -118,5 +119,44 @@ router.post("/appointments", createAppointment);
  *         description: Rendez-vous introuvable
  */
 router.patch("/appointments/:id/cancel", cancelAppointment);
+
+/**
+ * @openapi
+ * /api/patient/appointments/{id}/reschedule:
+ *   patch:
+ *     summary: Reporter un rendez-vous
+ *     tags: [Patient - M2]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [appointment_date, appointment_time]
+ *             properties:
+ *               appointment_date:
+ *                 type: string
+ *                 format: date
+ *                 example: "2026-12-20"
+ *               appointment_time:
+ *                 type: string
+ *                 example: "14:30"
+ *     responses:
+ *       200:
+ *         description: Rendez-vous reporté avec succès
+ *       400:
+ *         description: Créneau indisponible ou données invalides
+ *       404:
+ *         description: Rendez-vous introuvable
+ */
+router.patch("/appointments/:id/reschedule", rescheduleAppointment);
 
 export default router;

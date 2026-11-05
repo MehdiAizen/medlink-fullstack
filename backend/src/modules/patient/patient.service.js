@@ -161,7 +161,7 @@ export async function cancelAppointment(patientId, appointmentId) {
     const check = await client.query(
       `SELECT id, status FROM appointments 
        WHERE id = $1 AND patient_id = $2 FOR UPDATE`,
-      [appointmentId, patientId]
+      [appointmentId, patientId],
     );
 
     if (check.rows.length === 0) {
@@ -176,7 +176,79 @@ export async function cancelAppointment(patientId, appointmentId) {
       `UPDATE appointments 
        SET status = 'cancelled', updated_at = NOW() 
        WHERE id = $1 RETURNING *`,
-      [appointmentId]
+      [appointmentId],
+    );
+
+    await client.query("COMMIT");
+    return result.rows[0];
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+export async function rescheduleAppointment(
+  patientId,
+  appointmentId,
+  newDate,
+  newTime,
+) {
+  // Validation de base
+  if (!newDate || !newTime) {
+    throw new Error("Nouvelle date et heure obligatoires");
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+
+    // 1. Vérifier que le RDV existe, appartient au patient et est encore modifiable (Anti-IDOR)
+    const check = await client.query(
+      `SELECT id, practitioner_id, status FROM appointments 
+       WHERE id = $1 AND patient_id = $2 FOR UPDATE`,
+      [appointmentId, patientId],
+    );
+
+    if (check.rows.length === 0) {
+      throw new Error("Rendez-vous introuvable ou non autorisé");
+    }
+
+    if (
+      check.rows[0].status === "cancelled" ||
+      check.rows[0].status === "completed"
+    ) {
+      throw new Error("Impossible de reporter ce rendez-vous");
+    }
+
+    const practitionerId = check.rows[0].practitioner_id;
+
+    // 2. Vérifier que le nouveau créneau est libre (avec advisory lock pour éviter les conflits)
+    await client.query("SELECT pg_advisory_xact_lock($1::integer)", [
+      practitionerId,
+    ]);
+
+    const conflict = await client.query(
+      `SELECT id FROM appointments 
+       WHERE practitioner_id = $1 
+         AND appointment_date = $2::date 
+         AND appointment_time = $3::time 
+         AND status IN ('pending', 'confirmed')
+         AND id != $4`,
+      [practitionerId, newDate, newTime, appointmentId],
+    );
+
+    if (conflict.rows.length > 0) {
+      throw new Error("Ce nouveau créneau est déjà réservé");
+    }
+
+    // 3. Mettre à jour le rendez-vous
+    const result = await client.query(
+      `UPDATE appointments 
+       SET appointment_date = $1::date, appointment_time = $2::time, status = 'pending', updated_at = NOW()
+       WHERE id = $3 RETURNING *`,
+      [newDate, newTime, appointmentId],
     );
 
     await client.query("COMMIT");

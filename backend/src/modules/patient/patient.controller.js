@@ -3,6 +3,7 @@ import {
   listPatientAppointments,
   bookAppointment,
   cancelAppointment as cancelAppointmentService,
+  rescheduleAppointment as rescheduleAppointmentService,
 } from "./patient.service.js";
 
 export async function getPractitioners(req, res) {
@@ -63,6 +64,29 @@ export async function cancelAppointment(req, res) {
 
     const updated = await cancelAppointmentService(req.user.id, appointmentId);
     res.json({ message: "Rendez-vous annulé", appointment: updated });
+  } catch (error) {
+    const status = error.message.includes("introuvable") ? 404 : 400;
+    res.status(status).json({ error: error.message });
+  }
+}
+
+export async function rescheduleAppointment(req, res) {
+  try {
+    const appointmentId = parseInt(req.params.id, 10);
+    const { appointment_date, appointment_time } = req.body;
+
+    if (isNaN(appointmentId)) {
+      return res.status(400).json({ error: "ID invalide" });
+    }
+
+    const updated = await rescheduleAppointmentService(
+      req.user.id,
+      appointmentId,
+      appointment_date,
+      appointment_time,
+    );
+
+    res.json({ message: "Rendez-vous reporté", appointment: updated });
   } catch (error) {
     const status = error.message.includes("introuvable") ? 404 : 400;
     res.status(status).json({ error: error.message });
