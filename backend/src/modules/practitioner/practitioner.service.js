@@ -381,3 +381,27 @@ export async function getPatientResults(practitionerId, patientId) {
 
   return result.rows;
 }
+
+async function assertMyPatient(practitionerId, patientId) {
+  const check = await pool.query(
+    `SELECT 1 FROM users u
+     WHERE u.id = $1 AND u.role = 'patient'
+       AND (
+         EXISTS (
+           SELECT 1 FROM appointments a
+           WHERE a.patient_id = u.id AND a.practitioner_id = $2
+         )
+         OR EXISTS (
+           SELECT 1 FROM medical_records m
+           WHERE m.patient_id = u.id AND m.practitioner_id = $2
+         )
+       )`,
+    [patientId, practitionerId]
+  );
+
+  if (check.rows.length === 0) {
+    const err = new Error('Patient non autorisé pour ce praticien');
+    err.status = 403;
+    throw err;
+  }
+}
