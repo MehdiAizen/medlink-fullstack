@@ -5,7 +5,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 // Configuration du client JWKS pour Keycloak
-// Mehdi devra remplir ces variables dans le .env
+// remplir ces variables dans le .env
 const jwksUri = process.env.KEYCLOAK_JWKS_URI || 'http://localhost:8080/realms/medlink/protocol/openid-connect/certs';
 const issuer = process.env.KEYCLOAK_ISSUER || 'http://localhost:8080/realms/medlink';
 

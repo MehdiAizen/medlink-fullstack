@@ -4,7 +4,7 @@ export function logAction(action, ressource = null) {
     return async (req, res, next) => {
         try {
             //auparavant audit par id user
-            // Récupérer la vraie IP derrière un proxy (Nginx/Keycloak) si elle existe
+            // Récupérer la vraie IP derrière un proxy (Nginx/Keycloak)
             const clientIp = req.headers['x-forwarded-for']
                 ? req.headers['x-forwarded-for'].split(',')[0].trim()
                 : req.ip;
