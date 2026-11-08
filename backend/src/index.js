@@ -10,6 +10,7 @@ import patientRoutes from "./modules/patient/patient.routes.js";
 import practitionerRoutes from "./modules/practitioner/practitioner.routes.js";
 import adminRoutes from "./modules/admin/admin.routes.js";
 import dashboardRoutes from "./shared/routes/dashboard.routes.js";
+import { startReminderWorker } from "./modules/patient/reminder.worker.js";
 
 dotenv.config();
 
@@ -45,6 +46,9 @@ app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ error: "Erreur interne du serveur" });
 });
+
+//Démarrage du cron de rappel
+startReminderWorker();
 
 // Démarrage du serveur
 app.listen(PORT, () => {

@@ -1,4 +1,5 @@
 import { Router } from "express";
+import rateLimit from "express-rate-limit";
 import { authenticate, requireRole } from "../../shared/middleware/auth.js";
 import {
   getPractitioners,
@@ -7,6 +8,17 @@ import {
   cancelAppointment,
   rescheduleAppointment,
 } from "./patient.controller.js";
+
+const bookingLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  message: {
+    error:
+      "Trop de tentatives de réservation. Veuillez réessayer dans 15 minutes.",
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 const router = Router();
 
@@ -93,7 +105,7 @@ router.get("/appointments", getAppointments);
  *       409:
  *         description: Créneau déjà réservé
  */
-router.post("/appointments", createAppointment);
+router.post("/appointments", bookingLimiter, createAppointment);
 
 /**
  * @openapi
