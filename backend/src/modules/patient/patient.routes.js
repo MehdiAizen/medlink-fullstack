@@ -7,6 +7,7 @@ import {
   createAppointment,
   cancelAppointment,
   rescheduleAppointment,
+  getResults,
 } from "./patient.controller.js";
 
 const bookingLimiter = rateLimit({
@@ -170,5 +171,21 @@ router.patch("/appointments/:id/cancel", cancelAppointment);
  *         description: Rendez-vous introuvable
  */
 router.patch("/appointments/:id/reschedule", rescheduleAppointment);
+
+/**
+ * @openapi
+ * /api/patient/records/results:
+ *   get:
+ *     summary: Récupère les résultats d'analyses du patient (avec journalisation)
+ *     tags: [Patient - M2]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Liste des résultats
+ *       401:
+ *         description: Non authentifié
+ */
+router.get("/records/results", getResults);
 
 export default router;
