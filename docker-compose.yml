@@ -21,17 +21,13 @@ services:
   backend:
     build: ./backend
     container_name: medlink-backend
+    env_file:
+      - .env
     ports:
       - "4000:4000"
     environment:
       - NODE_ENV=production
-      # Variables lues par ton db.js
       - DB_HOST=db
-      - DB_PORT=5432
-      - DB_USER=medlink
-      - DB_PASSWORD=medlink_secret
-      - DB_NAME=medlink
-      - JWT_SECRET=ton_super_secret_jwt
     depends_on:
       db:
         condition: service_healthy
@@ -45,5 +41,22 @@ services:
     depends_on:
       - backend
 
+  # 4. Keycloak (Identity and Access Management)
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.8.2
+    container_name: medlink-keycloak
+    command: start-dev
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+    ports:
+      - "8081:8080"
+    volumes:
+      - keycloak_data:/opt/keycloak/data
+    restart: unless-stopped     
+
 volumes:
   postgres_data:
+  keycloak_data:
+
+  

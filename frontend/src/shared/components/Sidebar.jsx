@@ -20,7 +20,9 @@ export default function Sidebar() {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
 
-    const nav = user?.role === 'doctor' ? doctorNav : patientNav;
+    const nav = ['doctor', 'practitioner'].includes(user?.role)
+    ? doctorNav
+    : patientNav;
 
     const handleLogout = () => {
         logout();

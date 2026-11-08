@@ -1,36 +1,38 @@
-const API_BASE = "/api";
+import keycloak from '../keycloak.js';
 
-function getToken() {
-  return localStorage.getItem("medlink_token");
-}
+const API_BASE = "/api";
 
 async function request(path, options = {}) {
   const headers = {
     "Content-Type": "application/json",
     ...options.headers,
   };
-  const token = getToken();
-  if (token) headers.Authorization = `Bearer ${token}`;
 
-  const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
+  // Rafraîchir le token si nécessaire
+  if (keycloak.authenticated) {
+    await keycloak.updateToken(30);
+    headers.Authorization = `Bearer ${keycloak.token}`;
+  }
+
+  const res = await fetch(`${API_BASE}${path}`, {
+    ...options,
+    headers,
+  });
+
   const data = await res.json().catch(() => ({}));
 
   if (!res.ok) {
     throw new Error(data.error || `Erreur ${res.status}`);
   }
+
   return data;
 }
 
 export const api = {
   // --- Module AUTH ---
-  auth: {
-    login: (email, password) =>
-      request("/auth/login", {
-        method: "POST",
-        body: JSON.stringify({ email, password }),
-      }),
-    me: () => request("/auth/me"),
-  },
+auth: {
+  me: () => request("/auth/me"),
+},
 
   // --- Module PATIENT ---
   patient: {
