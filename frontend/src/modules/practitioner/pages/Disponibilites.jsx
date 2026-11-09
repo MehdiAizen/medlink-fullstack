@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../../shared/context/AuthContext';
-import api from '../../../shared/api/apiConfig';
+import { api } from '../../../shared/api/axiosConfig';
 
 export default function Disponibilites() {
   const { user } = useAuth();

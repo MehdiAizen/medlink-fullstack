@@ -13,6 +13,14 @@ import BookAppointment from './modules/patient/pages/BookAppointment';
 import Records from './modules/patient/pages/Records';
 import Results from './modules/patient/pages/Results';
 
+// 3. Import des pages PRATICIEN (US-18 à US-26)
+import Disponibilites from './modules/practitioner/pages/Disponibilites';
+import Agenda from './modules/practitioner/pages/Agenda';
+import Patients from './modules/practitioner/pages/Patients';
+import DossiersMedicaux from './modules/practitioner/pages/DossiersMedicaux';
+import ComptesRendus from './modules/practitioner/pages/ComptesRendus';
+import PublierResultats from './modules/practitioner/pages/PublierResultats';
+
 // Composant de protection des routes
 function PrivateRoute({ children }) {
     const { user, loading } = useAuth();
@@ -30,19 +38,25 @@ function PrivateRoute({ children }) {
 export default function App() {
     return (
         <Routes>
-            {/* ✅ Route publique : Page d'accueil */}
+            {/* Route publique : Page d'accueil */}
             <Route path="/" element={<Landing />} />
 
-            {/* ✅ Route publique : Page de connexion */}
+            {/* Route publique : Page de connexion */}
             <Route path="/login" element={<Login />} />
 
-            {/* ✅ Routes protégées : Application (accessible uniquement si connecté) */}
+            {/* Routes protégées : Application (accessible uniquement si connecté) */}
             <Route path="/app" element={<PrivateRoute><Layout /></PrivateRoute>}>
                 <Route index element={<Dashboard />} />
                 <Route path="appointments" element={<Appointments />} />
                 <Route path="book" element={<BookAppointment />} />
                 <Route path="records" element={<Records />} />
                 <Route path="results" element={<Results />} />
+                <Route path="disponibilites" element={<Disponibilites />} />  
+                <Route path="agenda" element={<Agenda />} />                    
+                <Route path="patients" element={<Patients />} />                
+                <Route path="dossiers" element={<DossiersMedicaux />} />        
+                <Route path="comptes-rendus" element={<ComptesRendus />} />      
+                <Route path="publier-resultats" element={<PublierResultats />} /> 
             </Route>
 
             {/* Redirection des pages inexistantes vers l'accueil */}
