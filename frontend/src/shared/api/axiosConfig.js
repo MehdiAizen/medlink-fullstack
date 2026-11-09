@@ -21,8 +21,6 @@ async function request(path, options = {}) {
   return data;
 }
 
-// Lit le rôle dans le JWT stocké (sert uniquement à choisir la bonne route côté interface :
-// la vraie vérification des droits reste faite par le backend sur chaque requête).
 function currentRole() {
   try {
     const payload = getToken().split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
@@ -32,7 +30,6 @@ function currentRole() {
   }
 }
 
-// Appelle la fonction correspondant au rôle connecté, ou refuse proprement.
 const byRole = (map) => (...args) => {
   const fn = map[currentRole()];
   if (!fn) return Promise.reject(new Error('Action non disponible pour votre rôle'));
@@ -85,14 +82,11 @@ const practitioner = {
       request(`/practitioner/patients${q ? `?q=${encodeURIComponent(q)}` : ''}`),
     records: (id) => request(`/practitioner/patients/${id}/records`),
     results: (id) => request(`/practitioner/patients/${id}/results`),
-    // AJOUT : Pour rédiger un compte-rendu (US-24 + US-47)
     addRecord: (id, data) =>
       request(`/practitioner/patients/${id}/records`, {
         method: 'POST',
         body: JSON.stringify(data),
       }),
-      
-    // AJOUT : Pour publier un résultat (US-25 + US-47)
     addResult: (id, data) =>
       request(`/practitioner/patients/${id}/results`, {
         method: 'POST',
@@ -100,8 +94,8 @@ const practitioner = {
       }),
   },
   records: {
-    // liste globale optionnelle (sinon on passe par patients.records)
-    list: () => request('/practitioner/patients'), // ou à adapter plus tard
+    // ✅ CORRIGÉ : Appelle maintenant la bonne route pour lister les comptes-rendus
+    list: () => request('/practitioner/records'),
     create: (data) =>
       request('/practitioner/records', {
         method: 'POST',
@@ -122,8 +116,6 @@ export const api = {
   patient,
   practitioner,
 
-  // Raccourcis utilisés par les pages partagées (Appointments, BookAppointment, Records, Results) :
-  // chaque appel est dirigé vers le module du rôle connecté.
   appointments: {
     list: byRole({ patient: patient.appointments.list, practitioner: practitioner.appointments.list }),
     create: byRole({ patient: patient.appointments.create }),
@@ -133,11 +125,8 @@ export const api = {
   records: {
     list: byRole({ patient: patient.records.list, practitioner: practitioner.records.list }),
     results: byRole({ patient: patient.records.results }),
-    create: byRole({
-      practitioner: practitioner.records.create,
-    }),
+    create: byRole({ practitioner: practitioner.records.create }),
   },
 
-  // --- Fallback Dashboard ---
   dashboard: () => request('/dashboard'),
 };

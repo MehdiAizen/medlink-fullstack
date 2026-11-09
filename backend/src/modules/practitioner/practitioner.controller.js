@@ -1,6 +1,5 @@
 import * as service from './practitioner.service.js';
 
-// ✅ US-19 : Agenda unifié du praticien
 export async function getAppointments(req, res) {
   try {
     const appointments = await service.listAppointments(req.user.id);
@@ -11,19 +10,12 @@ export async function getAppointments(req, res) {
   }
 }
 
-// ✅ US-19 & US-20 : Modifier le statut d'un RDV (confirmer/annuler/terminer)
 export async function patchAppointmentStatus(req, res) {
   try {
     const { status } = req.body;
-    if (!status) {
-      return res.status(400).json({ success: false, error: 'Le champ status est requis' });
-    }
+    if (!status) return res.status(400).json({ success: false, error: 'Le champ status est requis' });
 
-    const updated = await service.updateAppointmentStatus(
-      req.user.id,
-      req.params.id,
-      status
-    );
+    const updated = await service.updateAppointmentStatus(req.user.id, req.params.id, status);
     res.json({ success: true, data: updated });
   } catch (err) {
     console.error('[practitioner] patchAppointmentStatus:', err);
@@ -31,7 +23,6 @@ export async function patchAppointmentStatus(req, res) {
   }
 }
 
-// ✅ US-18 : Lister les disponibilités du praticien
 export async function getDisponibilites(req, res) {
   try {
     const list = await service.listDisponibilites(req.user.id);
@@ -42,7 +33,6 @@ export async function getDisponibilites(req, res) {
   }
 }
 
-// ✅ US-18 & US-21 : Créer une disponibilité ou une absence
 export async function postDisponibilite(req, res) {
   try {
     const created = await service.createDisponibilite(req.user.id, req.body);
@@ -53,7 +43,6 @@ export async function postDisponibilite(req, res) {
   }
 }
 
-// ✅ US-21 : Supprimer une disponibilité
 export async function removeDisponibilite(req, res) {
   try {
     const result = await service.deleteDisponibilite(req.user.id, req.params.id);
@@ -64,10 +53,9 @@ export async function removeDisponibilite(req, res) {
   }
 }
 
-// ✅ US-22 : Recherche parmi MES patients uniquement (Filtrage RBAC)
 export async function searchPatients(req, res) {
   try {
-    const q = req.query.q || ''; // Paramètre de recherche
+    const q = req.query.q || '';
     const patients = await service.searchMyPatients(req.user.id, q);
     res.json({ success: true, data: patients, count: patients.length });
   } catch (err) {
@@ -76,23 +64,12 @@ export async function searchPatients(req, res) {
   }
 }
 
-// ✅ US-23 & US-47 : Accès au dossier patient + JOURNALISATION OBLIGATOIRE
 export async function getPatientRecords(req, res) {
   try {
     const patientId = parseInt(req.params.id, 10);
-    if (Number.isNaN(patientId)) {
-      return res.status(400).json({ success: false, error: 'ID patient invalide' });
-    }
+    if (Number.isNaN(patientId)) return res.status(400).json({ success: false, error: 'ID patient invalide' });
 
-    // Récupération de l'IP pour le journal d'audit
-    const ip = req.headers['x-forwarded-for'] 
-      ? req.headers['x-forwarded-for'].split(',')[0].trim() 
-      : req.socket?.remoteAddress || null;
-
-    // Le service gère à la fois :
-    // 1. La vérification RBAC (ce patient est-il bien le mien ?)
-    // 2. La journalisation dans journal_audit (US-47)
-    // 3. La récupération des données du dossier
+    const ip = req.headers['x-forwarded-for'] ? req.headers['x-forwarded-for'].split(',')[0].trim() : req.socket?.remoteAddress || null;
     const data = await service.getPatientRecords(req.user.id, patientId, ip);
     res.json({ success: true, data });
   } catch (err) {
@@ -101,7 +78,6 @@ export async function getPatientRecords(req, res) {
   }
 }
 
-// ✅ US-24 : Rédaction d'un compte-rendu
 export async function postMedicalRecord(req, res) {
   try {
     const record = await service.createMedicalRecord(req.user.id, req.body);
@@ -112,7 +88,6 @@ export async function postMedicalRecord(req, res) {
   }
 }
 
-// ✅ US-25 : Publication d'un résultat d'examen
 export async function postLabResult(req, res) {
   try {
     const lab = await service.createLabResult(req.user.id, req.body);
@@ -123,17 +98,27 @@ export async function postLabResult(req, res) {
   }
 }
 
-// ✅ US-25 : Consultation des résultats d'un patient
 export async function getPatientResults(req, res) {
   try {
     const patientId = parseInt(req.params.id, 10);
-    if (Number.isNaN(patientId)) {
-      return res.status(400).json({ success: false, error: 'ID patient invalide' });
-    }
+    if (Number.isNaN(patientId)) return res.status(400).json({ success: false, error: 'ID patient invalide' });
+    
     const results = await service.getPatientResults(req.user.id, patientId);
     res.json({ success: true, data: results });
   } catch (err) {
     console.error('[practitioner] getPatientResults:', err);
     res.status(err.status || 500).json({ success: false, error: err.message || 'Erreur serveur' });
+  }
+}
+
+// ✅ 3. NOUVELLE FONCTION CONTRÔLEUR AJOUTÉE ICI
+export async function listRecords(req, res) {
+  try {
+    console.log("🚀 DEBUG: La route /api/practitioner/records a été appelée avec succès !");
+    const records = await service.listAllRecords(req.user.id);
+    res.json({ success: true, data: records });
+  } catch (err) {
+    console.error('[practitioner] listRecords:', err);
+    res.status(500).json({ success: false, error: 'Erreur serveur' });
   }
 }
