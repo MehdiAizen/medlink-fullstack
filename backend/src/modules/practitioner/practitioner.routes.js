@@ -36,7 +36,18 @@ router.get('/patients/:id/records', authenticate, requireRole('practitioner'), g
 router.get('/patients/:id/results', authenticate, requireRole('practitioner'), getPatientResults);
 
 // --- Comptes-rendus & résultats (US-24, US-25, US-26) ---
-router.post('/records', authenticate, requireRole('practitioner'), postMedicalRecord);
-router.post('/results', authenticate, requireRole('practitioner'), postLabResult);
+router.post(
+  '/patients/:id/records',
+  authenticate,
+  requireRole('practitioner'),
+  postMedicalRecord
+);
+
+router.post(
+  '/patients/:id/results',
+  authenticate,
+  requireRole('practitioner'),
+  postLabResult
+);
 
 export default router;
