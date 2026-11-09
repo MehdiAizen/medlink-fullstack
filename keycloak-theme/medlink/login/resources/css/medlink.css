@@ -1,0 +1,65 @@
+/* ===== MedLink : couleurs du site (turquoise #0ea5a5) ===== */
+:root {
+  --medlink-primary: #0ea5a5;
+  --medlink-primary-dark: #0c8a8a;
+  --medlink-primary-50: #f0fdfa;
+  --medlink-secondary-container: #d1fae5;
+  --medlink-text: #0f172a;
+  --medlink-muted: #64748b;
+
+  /* Variables PatternFly utilisées par Keycloak */
+  --pf-v5-global--primary-color--100: var(--medlink-primary);
+  --pf-v5-global--primary-color--200: var(--medlink-primary-dark);
+  --pf-v5-global--active-color--100: var(--medlink-primary);
+  --pf-v5-global--link--Color: var(--medlink-primary-dark);
+  --pf-v5-global--link--Color--hover: var(--medlink-primary);
+  --keycloak-card-top-color: var(--medlink-primary);
+}
+
+/* Fond : même dégradé que la page d'accueil */
+.login-pf body {
+  background: linear-gradient(135deg, var(--medlink-primary-50) 0%, #ffffff 50%, var(--medlink-secondary-container) 100%) no-repeat center center fixed;
+  background-size: cover;
+}
+
+/* Logo à la place du texte « MEDLINK » */
+#kc-header-wrapper {
+  font-size: 0 !important;
+  color: transparent !important;
+  height: 110px;
+  background: url('../img/logo-medlink.jpg') no-repeat center center / contain;
+  border-radius: 16px;
+  margin-bottom: 8px;
+}
+
+/* Carte du formulaire */
+.pf-v5-c-login__main {
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+}
+.pf-v5-c-login__main-header {
+  border-top: 4px solid var(--medlink-primary);
+}
+
+/* Bouton principal */
+.pf-v5-c-button.pf-m-primary {
+  --pf-v5-c-button--m-primary--BackgroundColor: var(--medlink-primary);
+  --pf-v5-c-button--m-primary--hover--BackgroundColor: var(--medlink-primary-dark);
+  --pf-v5-c-button--m-primary--focus--BackgroundColor: var(--medlink-primary-dark);
+  --pf-v5-c-button--m-primary--active--BackgroundColor: var(--medlink-primary-dark);
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+/* Champs de saisie : bordure turquoise au focus */
+.pf-v5-c-form-control:focus-within,
+.pf-v5-c-form-control:focus {
+  --pf-v5-c-form-control--focus--BorderBottomColor: var(--medlink-primary);
+  --pf-v5-c-form-control--hover--BorderBottomColor: var(--medlink-primary);
+  border-color: var(--medlink-primary);
+}
+
+/* Liens (mot de passe oublié, etc.) */
+a { color: var(--medlink-primary-dark); }
+a:hover { color: var(--medlink-primary); }

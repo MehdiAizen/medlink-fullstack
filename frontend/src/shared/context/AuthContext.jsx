@@ -10,6 +10,22 @@ import keycloak from '../keycloak.js';
 
 const AuthContext = createContext(null);
 
+// keycloak.init() ne peut être appelé qu'une seule fois par instance.
+// En développement, React.StrictMode exécute les effets deux fois :
+// on partage donc la même promesse d'initialisation entre les deux exécutions.
+let keycloakInitPromise = null;
+
+function initKeycloakOnce() {
+  if (!keycloakInitPromise) {
+    keycloakInitPromise = keycloak.init({
+      onLoad: 'check-sso',
+      pkceMethod: 'S256',
+      checkLoginIframe: false,
+    });
+  }
+  return keycloakInitPromise;
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -19,13 +35,10 @@ export function AuthProvider({ children }) {
 
     const initializeAuth = async () => {
       try {
-        const authenticated = await keycloak.init({
-          onLoad: 'check-sso',
-          pkceMethod: 'S256',
-          checkLoginIframe: false,
-        });
+        const authenticated = await initKeycloakOnce();
 
         if (authenticated) {
+          try { sessionStorage.removeItem('medlink-login-attempt'); } catch { /* ignoré */ }
           const profile = await api.auth.me();
 
           if (mounted) {
@@ -47,11 +60,12 @@ export function AuthProvider({ children }) {
     };
   }, []);
 
-const login = async () => {
-  await keycloak.login({
-    redirectUri: window.location.origin + '/login',
-  });
-};
+  const login = async () => {
+    await keycloak.login({
+      redirectUri: window.location.origin + '/app',
+    });
+  };
+
   const logout = () => {
     setUser(null);
 

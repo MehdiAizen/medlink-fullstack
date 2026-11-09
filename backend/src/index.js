@@ -16,6 +16,10 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 4000;
 
+// Le backend est derrière nginx : on fait confiance à un seul proxy
+// pour lire l'IP réelle du client (limitation de débit, journal d'audit).
+app.set("trust proxy", 1);
+
 // Middlewares globaux
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());

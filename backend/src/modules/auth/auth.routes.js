@@ -1,6 +1,7 @@
 import { Router } from "express";
-import { login, getMe } from "./auth.controller.js";
+import { login, getMe, register } from "./auth.controller.js";
 import { authenticate } from "../../shared/middleware/auth.js";
+import { registerLimiter } from "../../shared/middleware/rate-limit.js";
 
 const router = Router();
 
@@ -34,6 +35,52 @@ const router = Router();
  */
 // Route publique : tout le monde peut essayer de se connecter
 router.post("/login", login);
+
+/**
+ * @openapi
+ * /api/auth/register:
+ *   post:
+ *     summary: Inscription d'un patient (compte créé dans Keycloak puis profil MedLink)
+ *     tags: [Authentification - M1]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - firstName
+ *               - lastName
+ *               - email
+ *               - phone
+ *               - password
+ *               - acceptTerms
+ *             properties:
+ *               firstName:
+ *                 type: string
+ *               lastName:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               phone:
+ *                 type: string
+ *                 example: "+21622123456"
+ *               password:
+ *                 type: string
+ *               acceptTerms:
+ *                 type: boolean
+ *     responses:
+ *       201:
+ *         description: Compte créé, email de vérification envoyé
+ *       400:
+ *         description: Données invalides
+ *       409:
+ *         description: Création impossible avec ces informations
+ *       429:
+ *         description: Trop de tentatives
+ */
+// Route publique, limitée en fréquence par adresse IP
+router.post("/register", registerLimiter, register);
 
 /**
  * @openapi

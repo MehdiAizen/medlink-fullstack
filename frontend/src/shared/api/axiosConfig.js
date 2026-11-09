@@ -32,6 +32,22 @@ export const api = {
   // --- Module AUTH ---
 auth: {
   me: () => request("/auth/me"),
+  // Route publique : pas de token. On garde les erreurs par champ (err.fields).
+  register: async (payload) => {
+    const res = await fetch(`${API_BASE}/auth/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      const err = new Error(data.error || `Erreur ${res.status}`);
+      err.status = res.status;
+      err.fields = data.fields || {};
+      throw err;
+    }
+    return data;
+  },
 },
 
   // --- Module PATIENT ---

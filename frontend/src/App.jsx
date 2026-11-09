@@ -5,6 +5,7 @@ import Layout from './shared/components/Layout';
 // 1. Import de la Landing Page et du Login
 import Landing from './shared/pages/Landing';
 import Login from './modules/auth/pages/Login';
+import Signup from './modules/auth/pages/Signup';
 
 // 2. Import des pages de l'application (Dashboard, etc.)
 import Dashboard from './shared/pages/Dashboard';
@@ -35,6 +36,9 @@ export default function App() {
 
             {/* ✅ Route publique : Page de connexion */}
             <Route path="/login" element={<Login />} />
+
+            {/* ✅ Route publique : Inscription patient */}
+            <Route path="/signup" element={<Signup />} />
 
             {/* ✅ Routes protégées : Application (accessible uniquement si connecté) */}
             <Route path="/app" element={<PrivateRoute><Layout /></PrivateRoute>}>
