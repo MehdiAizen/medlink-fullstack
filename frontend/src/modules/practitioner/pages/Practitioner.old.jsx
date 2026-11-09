@@ -55,7 +55,7 @@ export default function Dashboard() {
             {/* ✅ En-tête dynamique (US-19) */}
             <header>
                 <h1 className="text-2xl font-bold text-on-surface">
-                    Bonjour, Dr. {lastName} 👋
+                    Bonjour, {user?.full_name?.startsWith('Dr.') ? user.full_name : `Dr. ${lastName}`} 👋
                 </h1>
                 <p className="text-on-variant">
                     {new Date().toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}

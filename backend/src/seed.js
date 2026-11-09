@@ -153,8 +153,8 @@ async function seed() {
          ('admin@medlink.tn', $1, 'Admin Principal', 'admin', NULL, '+216 71 000 000'),
          ('patient@medlink.tn', $1, 'Amine Ben Salah', 'patient', NULL, '+216 98 123 456'),
          ('sara.patient@medlink.tn', $1, 'Sara Trabelsi', 'patient', NULL, '+216 22 456 789'),
-         ('doctor@medlink.tn', $1, 'Dr. Karim Mansouri', 'practitioner', 'Cardiologie', '+216 71 234 567'),
-         ('pediatre@medlink.tn', $1, 'Dr. Leila Gharbi', 'practitioner', 'Pédiatrie', '+216 71 345 678')
+         ('doctor@medlink.tn', $1, 'Karim Mansouri', 'practitioner', 'Cardiologie', '+216 71 234 567'),
+         ('pediatre@medlink.tn', $1, 'Leila Gharbi', 'practitioner', 'Pédiatrie', '+216 71 345 678')
        RETURNING id, email, role`,
       [hash]
     );

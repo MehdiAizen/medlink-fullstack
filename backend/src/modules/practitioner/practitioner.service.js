@@ -1,10 +1,7 @@
 import pool from '../../shared/utils/db.js';
 
 /**
- * Liste les RDV du praticien connecté (US-19 — agenda multi-sites).
- * Champs alignés sur la page Agenda :
- * id, patient_name, appointment_date, appointment_time, reason, type, status,
- * clinique_id, clinique_nom, clinique_ville
+ * US-19 : Liste les RDV du praticien connecté (agenda multi-sites).
  */
 export async function listAppointments(practitionerId) {
   const result = await pool.query(
@@ -30,6 +27,10 @@ export async function listAppointments(practitionerId) {
   return result.rows;
 }
 
+/**
+ * US-19 & US-20 : Modifier le statut d'un RDV (confirmer/annuler/terminer).
+ * Vérifie que le RDV appartient bien au praticien.
+ */
 export async function updateAppointmentStatus(practitionerId, appointmentId, status) {
   const allowed = ['pending', 'confirmed', 'cancelled', 'completed'];
   if (!allowed.includes(status)) {
@@ -47,7 +48,7 @@ export async function updateAppointmentStatus(practitionerId, appointmentId, sta
   );
 
   if (result.rows.length === 0) {
-    const err = new Error('Rendez-vous non trouvé');
+    const err = new Error('Rendez-vous non trouvé ou non autorisé');
     err.status = 404;
     throw err;
   }
@@ -55,7 +56,9 @@ export async function updateAppointmentStatus(practitionerId, appointmentId, sta
   return result.rows[0];
 }
 
-/** Liste les disponibilités du praticien (US-18, US-21) */
+/**
+ * US-18 & US-21 : Liste les disponibilités du praticien.
+ */
 export async function listDisponibilites(practitionerId) {
   const result = await pool.query(
     `SELECT d.*, c.nom AS clinique_nom, c.ville AS clinique_ville
@@ -68,7 +71,10 @@ export async function listDisponibilites(practitionerId) {
   return result.rows;
 }
 
-/** Créer un créneau ou un blocage (US-18, US-21) */
+/**
+ * US-18 & US-21 : Créer un créneau ou un blocage.
+ * Vérifie que le praticien est bien affecté à la clinique (US-29).
+ */
 export async function createDisponibilite(practitionerId, data) {
   const {
     clinique_id,
@@ -93,7 +99,7 @@ export async function createDisponibilite(practitionerId, data) {
     throw err;
   }
 
-  // Vérifier que le praticien est bien affecté à cette clinique
+  // Vérification RBAC : le praticien est-il bien affecté à cette clinique ?
   const link = await pool.query(
     `SELECT 1 FROM practitioner_clinique
      WHERE practitioner_id = $1 AND clinique_id = $2`,
@@ -115,7 +121,9 @@ export async function createDisponibilite(practitionerId, data) {
   return result.rows[0];
 }
 
-/** Supprimer un créneau / blocage (uniquement le sien) */
+/**
+ * US-21 : Supprimer un créneau / blocage (uniquement le sien).
+ */
 export async function deleteDisponibilite(practitionerId, id) {
   const result = await pool.query(
     `DELETE FROM disponibilites
@@ -124,14 +132,18 @@ export async function deleteDisponibilite(practitionerId, id) {
     [id, practitionerId]
   );
   if (result.rows.length === 0) {
-    const err = new Error('Disponibilité non trouvée');
+    const err = new Error('Disponibilité non trouvée ou non autorisée');
     err.status = 404;
     throw err;
   }
   return { deleted: true };
 }
 
-/** US-22 : recherche parmi MES patients uniquement */
+/**
+ * US-22 & US-39 : Recherche parmi MES patients uniquement (Fondement du RBAC).
+ * Un praticien ne voit QUE les patients avec qui il a eu un RDV ou un compte-rendu.
+ * ✅ Amélioration : Ajout de last_appointment et total_appointments pour l'UI.
+ */
 export async function searchMyPatients(practitionerId, q = '') {
   const term = `%${q.trim()}%`;
 
@@ -140,7 +152,9 @@ export async function searchMyPatients(practitionerId, q = '') {
        u.id,
        u.full_name,
        u.email,
-       u.phone
+       u.phone,
+       (SELECT MAX(appointment_date) FROM appointments WHERE patient_id = u.id AND practitioner_id = $1) as last_appointment,
+       (SELECT COUNT(*) FROM appointments WHERE patient_id = u.id AND practitioner_id = $1) as total_appointments
      FROM users u
      WHERE u.role = 'patient'
        AND (
@@ -159,7 +173,7 @@ export async function searchMyPatients(practitionerId, q = '') {
          OR u.email ILIKE $2
          OR CAST(u.id AS TEXT) = TRIM($3)
        )
-     ORDER BY u.full_name ASC
+     ORDER BY last_appointment DESC NULLS LAST, u.full_name ASC
      LIMIT 50`,
     [practitionerId, term, q.trim()]
   );
@@ -168,12 +182,11 @@ export async function searchMyPatients(practitionerId, q = '') {
 }
 
 /**
- * US-23 + US-47 :
- * accès au dossier d'un patient (uniquement s'il est "mien")
- * + écriture obligatoire dans journal_audit
+ * US-23, US-39 & US-47 : Accès au dossier d'un patient + JOURNALISATION OBLIGATOIRE.
+ * ✅ Amélioration : Renvoie aussi les labResults pour une vue complète en un seul appel.
  */
 export async function getPatientRecords(practitionerId, patientId, ip = null) {
-  // 1. Vérifier que ce patient appartient bien à ce praticien
+  // 1. Vérification RBAC stricte : ce patient appartient-il bien à ce praticien ?
   const check = await pool.query(
     `SELECT 1
      FROM users u
@@ -192,18 +205,31 @@ export async function getPatientRecords(practitionerId, patientId, ip = null) {
   );
 
   if (check.rows.length === 0) {
-    // Tentative non autorisée → journaliser aussi (US-39 / US-47)
+    // ❌ Tentative non autorisée → Journaliser l'alerte de sécurité (US-36 / US-39)
     await pool.query(
       `INSERT INTO journal_audit (utilisateur_id, action, ressource, adresse_ip)
        VALUES ($1, 'ACCESS_DENIED', $2, $3)`,
-      [practitionerId, `Dossier patient #${patientId}`, ip]
+      [practitionerId, `Tentative accès dossier patient #${patientId}`, ip]
     );
     const err = new Error('Accès non autorisé à ce dossier');
     err.status = 403;
     throw err;
   }
 
-  // 2. Récupérer le dossier
+  // 2. ✅ Journalisation de l'accès autorisé (US-47 - Livrable DevSecOps critique)
+  await pool.query(
+    `INSERT INTO journal_audit (utilisateur_id, action, ressource, adresse_ip)
+     VALUES ($1, 'VIEW_RECORD', $2, $3)`,
+    [practitionerId, `Dossier patient #${patientId}`, ip]
+  );
+
+  // 3. Récupérer les informations du patient
+  const patient = await pool.query(
+    `SELECT id, full_name, email, phone FROM users WHERE id = $1`,
+    [patientId]
+  );
+
+  // 4. Récupérer l'historique des comptes-rendus (US-26)
   const records = await pool.query(
     `SELECT
        m.id,
@@ -220,28 +246,32 @@ export async function getPatientRecords(practitionerId, patientId, ip = null) {
     [patientId]
   );
 
-  // 3. Journaliser l'accès autorisé (US-47)
-  await pool.query(
-    `INSERT INTO journal_audit (utilisateur_id, action, ressource, adresse_ip)
-     VALUES ($1, 'VIEW_RECORD', $2, $3)`,
-    [practitionerId, `Dossier patient #${patientId}`, ip]
-  );
-
-  // 4. Infos patient (sans données inutiles)
-  const patient = await pool.query(
-    `SELECT id, full_name, email, phone FROM users WHERE id = $1`,
+  // 5. Récupérer les résultats d'examens (US-25)
+  const labResults = await pool.query(
+    `SELECT id, test_name, result_value, unit, reference_range, status, result_date
+     FROM lab_results
+     WHERE patient_id = $1
+     ORDER BY result_date DESC`,
     [patientId]
   );
 
   return {
     patient: patient.rows[0],
     records: records.rows,
+    labResults: labResults.rows,
+    audit_logged: true // Indicateur pour confirmer que l'US-47 a été déclenchée
   };
 }
 
-/** US-24 : rédiger un compte-rendu de consultation */
+/**
+ * US-24 & US-47 : Rédiger un compte-rendu de consultation.
+ */
 export async function createMedicalRecord(practitionerId, data) {
   const { patient_id, title, diagnosis, notes, record_date } = data;
+
+  // AJOUTE CES 2 LIGNES POUR VOIR CE QUI SE PASSE
+  console.log("🔍 DEBUG CREATE_RECORD -> practitionerId:", practitionerId, "typeof:", typeof practitionerId);
+  console.log("🔍 DEBUG CREATE_RECORD -> patient_id:", patient_id, "typeof:", typeof patient_id);
 
   if (!patient_id || !title) {
     const err = new Error('patient_id et title sont obligatoires');
@@ -249,7 +279,7 @@ export async function createMedicalRecord(practitionerId, data) {
     throw err;
   }
 
-  // Le patient doit être lié au praticien (RDV ou dossier existant)
+  // Vérification RBAC : Le patient doit être lié au praticien
   const check = await pool.query(
     `SELECT 1 FROM users u
      WHERE u.id = $1 AND u.role = 'patient'
@@ -274,19 +304,19 @@ export async function createMedicalRecord(practitionerId, data) {
     [patient_id, practitionerId, title, diagnosis || null, notes || null, record_date || null]
   );
 
-  // Journal d'audit
+  // Journal d'audit (US-47)
   await pool.query(
-    `INSERT INTO journal_audit (utilisateur_id, action, ressource)
-     VALUES ($1, 'CREATE_RECORD', $2)`,
-    [practitionerId, `Compte-rendu #${result.rows[0].id} patient #${patient_id}`]
+    `INSERT INTO journal_audit (utilisateur_id, action, ressource, adresse_ip)
+     VALUES ($1, 'CREATE_RECORD', $2, $3)`,
+    [practitionerId, `Compte-rendu #${result.rows[0].id} patient #${patient_id}`, null]
   );
 
   return result.rows[0];
 }
 
-/** US-26 : historique des comptes-rendus d'un patient (déjà couvert par getPatientRecords) */
-
-/** US-25 : publier un résultat d'examen */
+/**
+ * US-25 & US-47 : Publier un résultat d'examen.
+ */
 export async function createLabResult(practitionerId, data) {
   const {
     patient_id,
@@ -311,7 +341,7 @@ export async function createLabResult(practitionerId, data) {
     throw err;
   }
 
-  // Même contrôle d'appartenance
+  // Vérification RBAC : Le patient doit être lié au praticien
   const check = await pool.query(
     `SELECT 1 FROM users u
      WHERE u.id = $1 AND u.role = 'patient'
@@ -344,17 +374,21 @@ export async function createLabResult(practitionerId, data) {
     ]
   );
 
+  // Journal d'audit (US-47)
   await pool.query(
-    `INSERT INTO journal_audit (utilisateur_id, action, ressource)
-     VALUES ($1, 'PUBLISH_RESULT', $2)`,
-    [practitionerId, `Résultat #${result.rows[0].id} patient #${patient_id}`]
+    `INSERT INTO journal_audit (utilisateur_id, action, ressource, adresse_ip)
+     VALUES ($1, 'PUBLISH_RESULT', $2, $3)`,
+    [practitionerId, `Résultat #${result.rows[0].id} patient #${patient_id}`, null]
   );
 
   return result.rows[0];
 }
 
-/** Liste des résultats d'un patient (pour le praticien) */
+/**
+ * US-25 & US-39 : Liste des résultats d'un patient (pour le praticien).
+ */
 export async function getPatientResults(practitionerId, patientId) {
+  // Vérification RBAC
   const check = await pool.query(
     `SELECT 1 FROM users u
      WHERE u.id = $1 AND u.role = 'patient'

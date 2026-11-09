@@ -61,6 +61,7 @@ const patient = {
 
 // --- Module PRACTITIONER ---
 const practitioner = {
+  dashboard: () => request('/dashboard'),
   appointments: {
     list: () => request('/practitioner/appointments'),
     updateStatus: (id, status) =>
@@ -84,6 +85,19 @@ const practitioner = {
       request(`/practitioner/patients${q ? `?q=${encodeURIComponent(q)}` : ''}`),
     records: (id) => request(`/practitioner/patients/${id}/records`),
     results: (id) => request(`/practitioner/patients/${id}/results`),
+    // AJOUT : Pour rédiger un compte-rendu (US-24 + US-47)
+    addRecord: (id, data) =>
+      request(`/practitioner/patients/${id}/records`, {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+      
+    // AJOUT : Pour publier un résultat (US-25 + US-47)
+    addResult: (id, data) =>
+      request(`/practitioner/patients/${id}/results`, {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
   },
   records: {
     // liste globale optionnelle (sinon on passe par patients.records)

@@ -54,7 +54,7 @@ export default function App() {
                 <Route path="disponibilites" element={<Disponibilites />} />  
                 <Route path="agenda" element={<Agenda />} />                    
                 <Route path="patients" element={<Patients />} />                
-                <Route path="dossiers" element={<DossiersMedicaux />} />        
+                <Route path="dossiers/:id" element={<DossiersMedicaux />} />        
                 <Route path="comptes-rendus" element={<ComptesRendus />} />      
                 <Route path="publier-resultats" element={<PublierResultats />} /> 
             </Route>
