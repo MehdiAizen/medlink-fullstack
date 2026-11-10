@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../shared/context/AuthContext';
 import { api } from '../../../shared/api/axiosConfig';
 import logo from '../../../shared/assets/logo-medlink.jpg';
+import { Shell, Field, InputShell, Ic, TEAL } from '../components/AuthUi';
 
 // --- Règles identiques à backend/src/shared/utils/validators.js -------------
 const NAME_REGEX = /^[\p{L}][\p{L}\p{M}' -]{1,49}$/u;
@@ -57,18 +58,12 @@ const INITIAL = {
   acceptTerms: false,
 };
 
-function Field({ id, label, error, children }) {
-  return (
-    <div>
-      <label htmlFor={id} className="label">{label}</label>
-      {children}
-      {error && (
-        <p id={`${id}-error`} role="alert" className="mt-1 text-xs font-medium text-error">
-          {error}
-        </p>
-      )}
-    </div>
-  );
+function strengthOf(password) {
+  const score = PASSWORD_CHECKS.filter((c) => c.test(password)).length;
+  if (!password) return { score: 0, label: '', color: 'bg-slate-200', text: 'text-slate-400' };
+  if (score <= 2) return { score, label: 'Faible', color: 'bg-red-500', text: 'text-red-600' };
+  if (score <= 4) return { score, label: 'Moyen', color: 'bg-amber-500', text: 'text-amber-600' };
+  return { score, label: 'Fort', color: 'bg-emerald-500', text: 'text-emerald-600' };
 }
 
 export default function Signup() {
@@ -139,26 +134,35 @@ export default function Signup() {
   // --- Écran de succès ------------------------------------------------------
   if (success) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-surface-low px-4 py-10">
-        <div className="card w-full max-w-md text-center hover:shadow-sm">
-          <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-success-container text-2xl text-success">
-            ✓
+      <Shell>
+        <div className="text-center lg:text-left">
+          <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-success-container text-success lg:mx-0">
+            <Ic name="check" size={30} />
           </div>
-          <h1 className="mb-3 text-2xl">Vérifiez votre boîte mail</h1>
-          <p className="mb-2 text-sm text-on-variant">
-            Votre compte a été créé. Un email de confirmation a été envoyé à
-          </p>
-          <p className="mb-5 break-all font-semibold">{success}</p>
-          <p className="mb-8 text-sm text-on-variant">
-            Cliquez sur le lien reçu pour confirmer votre adresse, puis connectez-vous.
-          </p>
-          <button type="button" onClick={() => login().catch(console.error)} className="btn-primary w-full">Aller à la connexion</button>
+          <h1 className="mb-3 text-3xl font-extrabold tracking-tight">Vérifiez votre boîte mail</h1>
+          <p className="mb-2 text-slate-500">Votre compte a été créé. Un email de confirmation a été envoyé à</p>
+          <p className="mb-5 break-all text-lg font-semibold">{success}</p>
+          <p className="mb-8 text-slate-500">Cliquez sur le lien reçu pour confirmer votre adresse, puis connectez-vous.</p>
+          <button
+            type="button"
+            onClick={() => login().catch(console.error)}
+            className={`flex h-14 w-full items-center justify-center gap-2 rounded-xl font-bold text-white shadow-lg shadow-[#028f82]/25 transition ${TEAL}`}
+          >
+            Aller à la connexion <Ic name="arrow" size={18} />
+          </button>
         </div>
-      </div>
+      </Shell>
     );
   }
 
   // --- Formulaire -----------------------------------------------------------
+  const fieldClass = (name, extra = '') =>
+    `h-[52px] w-full rounded-xl border bg-white pl-12 text-[15px] text-on-surface placeholder:text-slate-400 transition focus:outline-none focus:ring-4 ${extra} ${
+      errorFor(name)
+        ? 'border-error focus:border-error focus:ring-error/15'
+        : 'border-slate-300 focus:border-[#028f82] focus:ring-[#028f82]/15'
+    }`;
+
   const inputProps = (name, extra = {}) => ({
     id: name,
     name,
@@ -167,128 +171,183 @@ export default function Signup() {
     onBlur: blur(name),
     'aria-invalid': errorFor(name) ? 'true' : 'false',
     'aria-describedby': errorFor(name) ? `${name}-error` : undefined,
-    className: `input ${errorFor(name) ? 'border-error focus:border-error focus:ring-error/20' : ''}`,
+    className: fieldClass(name, 'pr-4'),
     ...extra,
   });
 
+  const strength = strengthOf(values.password);
+  const confirmOk = values.confirm !== '' && values.confirm === values.password;
+  const eyeButton = (
+    <button
+      type="button"
+      onClick={() => setShowPassword((s) => !s)}
+      className="grid h-9 w-9 place-items-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-on-surface"
+      aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+    >
+      <Ic name={showPassword ? 'eyeOff' : 'eye'} size={19} />
+    </button>
+  );
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-surface-low px-4 py-10">
-      <div className="card w-full max-w-lg hover:shadow-sm">
-        <img src={logo} alt="MedLink" style={{ width: 96, height: 'auto' }} className="mx-auto mb-5" />
-        <h1 className="mb-1 text-center text-2xl">Créer un compte patient</h1>
-        <p className="mb-6 text-center text-sm text-on-variant">
-          Accédez à vos rendez-vous et à votre dossier médical en toute sécurité.
-        </p>
+    <Shell>
+      <div className="mb-6 flex items-center gap-3 lg:hidden">
+        <span className="grid h-11 w-11 place-items-center overflow-hidden rounded-xl border border-slate-200 bg-white">
+          <img src={logo} alt="MedLink" className="h-9 w-9 object-contain" />
+        </span>
+        <span className="font-display text-2xl font-extrabold tracking-tight">MedLink</span>
+      </div>
 
-        {formError && (
-          <div role="alert" className="mb-5 rounded-lg bg-error-container px-4 py-3 text-sm font-medium text-error">
-            {formError}
-          </div>
-        )}
+      <h1 className="text-3xl font-extrabold tracking-tight sm:text-[2rem]">Créer un compte patient</h1>
+      <p className="mb-7 mt-2 text-slate-500">
+        Accédez à vos rendez-vous et à votre dossier médical en toute sécurité.
+      </p>
 
-        <form onSubmit={handleSubmit} noValidate className="space-y-4">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field id="firstName" label="Prénom" error={errorFor('firstName')}>
+      {formError && (
+        <div role="alert" className="mb-5 rounded-xl bg-error-container px-4 py-3 text-sm font-medium text-error">
+          {formError}
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} noValidate className="space-y-5">
+        <div className="grid gap-5 sm:grid-cols-2">
+          <Field id="firstName" label="Prénom" error={errorFor('firstName')}>
+            <InputShell icon="user">
               <input {...inputProps('firstName', { type: 'text', autoComplete: 'given-name' })} />
-            </Field>
-            <Field id="lastName" label="Nom" error={errorFor('lastName')}>
+            </InputShell>
+          </Field>
+          <Field id="lastName" label="Nom" error={errorFor('lastName')}>
+            <InputShell icon="user">
               <input {...inputProps('lastName', { type: 'text', autoComplete: 'family-name' })} />
-            </Field>
-          </div>
+            </InputShell>
+          </Field>
+        </div>
 
-          <Field id="email" label="Adresse email" error={errorFor('email')}>
+        <Field id="email" label="Adresse email" error={errorFor('email')}>
+          <InputShell icon="mail">
             <input {...inputProps('email', { type: 'email', autoComplete: 'email', placeholder: 'nom@exemple.com' })} />
-          </Field>
+          </InputShell>
+        </Field>
 
-          <Field id="phone" label="Téléphone" error={errorFor('phone')}>
-            <div className="flex">
-              <span className="inline-flex items-center rounded-l-lg border-2 border-r-0 border-outline-variant bg-surface-container px-3 text-sm font-semibold text-on-variant">
-                +216
-              </span>
-              <input
-                {...inputProps('phone', {
-                  type: 'tel',
-                  autoComplete: 'tel-national',
-                  placeholder: '22 123 456',
-                  className: `input rounded-l-none ${errorFor('phone') ? 'border-error focus:border-error focus:ring-error/20' : ''}`,
-                })}
-              />
-            </div>
-          </Field>
-
-          <Field id="password" label="Mot de passe" error={errorFor('password')}>
-            <div className="relative">
-              <input
-                {...inputProps('password', {
-                  type: showPassword ? 'text' : 'password',
-                  autoComplete: 'new-password',
-                  maxLength: 128,
-                  className: `input pr-24 ${errorFor('password') ? 'border-error focus:border-error focus:ring-error/20' : ''}`,
-                })}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword((s) => !s)}
-                className="absolute inset-y-0 right-3 text-xs font-semibold text-primary hover:underline"
-                aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
-              >
-                {showPassword ? 'Masquer' : 'Afficher'}
-              </button>
-            </div>
-            <ul className="mt-2 grid grid-cols-1 gap-1 text-xs sm:grid-cols-2" aria-label="Règles du mot de passe">
-              {PASSWORD_CHECKS.map((c) => {
-                const ok = c.test(values.password);
-                return (
-                  <li key={c.id} className={ok ? 'text-success' : 'text-on-variant'}>
-                    <span aria-hidden="true">{ok ? '✓' : '○'}</span> {c.label}
-                  </li>
-                );
+        <Field id="phone" label="Téléphone" error={errorFor('phone')}>
+          <div className="flex">
+            <span className="inline-flex h-[52px] items-center gap-2 rounded-l-xl border border-r-0 border-slate-300 bg-slate-100 px-4 text-[15px] font-semibold text-slate-600">
+              <Ic name="phone" size={17} /> +216
+            </span>
+            <input
+              {...inputProps('phone', {
+                type: 'tel',
+                autoComplete: 'tel-national',
+                placeholder: '22 123 456',
+                className: `h-[52px] w-full rounded-r-xl border bg-white px-4 text-[15px] text-on-surface placeholder:text-slate-400 transition focus:outline-none focus:ring-4 ${
+                  errorFor('phone')
+                    ? 'border-error focus:border-error focus:ring-error/15'
+                    : 'border-slate-300 focus:border-[#028f82] focus:ring-[#028f82]/15'
+                }`,
               })}
-            </ul>
-          </Field>
+            />
+          </div>
+        </Field>
 
-          <Field id="confirm" label="Confirmer le mot de passe" error={errorFor('confirm')}>
+        <Field id="password" label="Mot de passe" error={errorFor('password')}>
+          <InputShell icon="lock" right={eyeButton}>
+            <input
+              {...inputProps('password', {
+                type: showPassword ? 'text' : 'password',
+                autoComplete: 'new-password',
+                maxLength: 128,
+                className: fieldClass('password', 'pr-14'),
+              })}
+            />
+          </InputShell>
+
+          {values.password && (
+            <div className="mt-3 flex items-center gap-3" aria-live="polite">
+              <div className="flex flex-1 gap-1.5" aria-hidden="true">
+                {PASSWORD_CHECKS.map((c, i) => (
+                  <span key={c.id} className={`h-1.5 flex-1 rounded-full ${i < strength.score ? strength.color : 'bg-slate-200'}`} />
+                ))}
+              </div>
+              <span className={`w-12 text-right text-xs font-bold ${strength.text}`}>{strength.label}</span>
+            </div>
+          )}
+
+          <ul className="mt-3 flex flex-wrap gap-2" aria-label="Règles du mot de passe">
+            {PASSWORD_CHECKS.map((c) => {
+              const ok = c.test(values.password);
+              return (
+                <li
+                  key={c.id}
+                  className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition ${
+                    ok ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'
+                  }`}
+                >
+                  {ok ? <Ic name="check" size={12} /> : <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-slate-400" />}
+                  {c.label}
+                </li>
+              );
+            })}
+          </ul>
+        </Field>
+
+        <Field id="confirm" label="Confirmer le mot de passe" error={errorFor('confirm')}>
+          <InputShell
+            icon="lock"
+            right={confirmOk ? <span className="text-emerald-500"><Ic name="check" size={20} /></span> : null}
+          >
             <input
               {...inputProps('confirm', {
                 type: showPassword ? 'text' : 'password',
                 autoComplete: 'new-password',
                 maxLength: 128,
+                className: fieldClass('confirm', 'pr-12'),
               })}
             />
-          </Field>
+          </InputShell>
+        </Field>
 
-          <div>
-            <label className="flex items-start gap-3 text-sm text-on-variant">
-              <input
-                type="checkbox"
-                name="acceptTerms"
-                checked={values.acceptTerms}
-                onChange={set('acceptTerms')}
-                onBlur={blur('acceptTerms')}
-                aria-describedby={errorFor('acceptTerms') ? 'acceptTerms-error' : undefined}
-                className="mt-0.5 h-4 w-4 rounded border-outline text-primary focus:ring-primary"
-              />
-              <span>
-                J'accepte les conditions d'utilisation et la politique de confidentialité de MedLink.
-              </span>
-            </label>
-            {errorFor('acceptTerms') && (
-              <p id="acceptTerms-error" role="alert" className="mt-1 text-xs font-medium text-error">
-                {errorFor('acceptTerms')}
-              </p>
-            )}
-          </div>
+        <div>
+          <label className="flex cursor-pointer items-start gap-3 text-sm leading-relaxed text-slate-600">
+            <input
+              type="checkbox"
+              name="acceptTerms"
+              checked={values.acceptTerms}
+              onChange={set('acceptTerms')}
+              onBlur={blur('acceptTerms')}
+              aria-describedby={errorFor('acceptTerms') ? 'acceptTerms-error' : undefined}
+              className="mt-0.5 h-5 w-5 flex-none rounded border-slate-300 text-[#028f82] focus:ring-[#028f82]"
+            />
+            <span>
+              J'accepte les <strong className="font-semibold text-[#028f82]">conditions d'utilisation</strong> et la{' '}
+              <strong className="font-semibold text-[#028f82]">politique de confidentialité</strong> de MedLink.
+            </span>
+          </label>
+          {errorFor('acceptTerms') && (
+            <p id="acceptTerms-error" role="alert" className="mt-1.5 text-xs font-medium text-error">
+              {errorFor('acceptTerms')}
+            </p>
+          )}
+        </div>
 
-          <button type="submit" disabled={submitting} className="btn-primary w-full py-3">
-            {submitting ? 'Création du compte…' : 'Créer mon compte'}
+        <div>
+          <button
+            type="submit"
+            disabled={submitting}
+            className={`flex h-14 w-full items-center justify-center gap-2 rounded-xl font-bold text-white shadow-lg shadow-[#028f82]/25 transition disabled:cursor-wait disabled:opacity-70 ${TEAL}`}
+          >
+            {submitting ? 'Création du compte…' : (<>Créer mon compte <Ic name="arrow" size={18} /></>)}
           </button>
-        </form>
+          <p className="mt-3 flex items-center justify-center gap-2 text-xs text-slate-500">
+            <Ic name="lock" size={13} /> Un email de vérification sera envoyé à l'adresse indiquée.
+          </p>
+        </div>
+      </form>
 
-        <p className="mt-6 text-center text-sm text-on-variant">
-          Vous avez déjà un compte ?{' '}
-          <button type="button" onClick={() => login().catch(console.error)} className="font-semibold text-primary hover:underline">Se connecter</button>
-        </p>
-      </div>
-    </div>
+      <p className="mt-7 border-t border-slate-100 pt-6 text-center text-slate-500">
+        Vous avez déjà un compte ?{' '}
+        <button type="button" onClick={() => login().catch(console.error)} className="font-bold text-[#028f82] hover:underline">
+          Se connecter
+        </button>
+      </p>
+    </Shell>
   );
 }

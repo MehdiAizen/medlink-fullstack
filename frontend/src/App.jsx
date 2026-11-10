@@ -6,6 +6,7 @@ import Layout from './shared/components/Layout';
 import Landing from './shared/pages/Landing';
 import Login from './modules/auth/pages/Login';
 import Signup from './modules/auth/pages/Signup';
+import SignupPractitioner from './modules/auth/pages/SignupPractitioner';
 
 // 2. Import des pages de l'application (Dashboard, etc.)
 import Dashboard from './shared/pages/Dashboard';
@@ -39,6 +40,9 @@ export default function App() {
 
             {/* ✅ Route publique : Inscription patient */}
             <Route path="/signup" element={<Signup />} />
+
+            {/* ✅ Route publique : Demande de compte praticien */}
+            <Route path="/signup-practitioner" element={<SignupPractitioner />} />
 
             {/* ✅ Routes protégées : Application (accessible uniquement si connecté) */}
             <Route path="/app" element={<PrivateRoute><Layout /></PrivateRoute>}>

@@ -1,5 +1,16 @@
-import { loginUser, getUserById, registerPatient, RegistrationError } from './auth.service.js';
-import { validateRegistration, PASSWORD_RULES_MESSAGE } from '../../shared/utils/validators.js';
+import {
+    loginUser,
+    getUserById,
+    registerPatient,
+    getPractitionerOptions,
+    createPractitionerRequest,
+    RegistrationError,
+} from './auth.service.js';
+import {
+    validateRegistration,
+    validatePractitionerRequest,
+    PASSWORD_RULES_MESSAGE,
+} from '../../shared/utils/validators.js';
 
 export async function login(req, res) {
     try {
@@ -62,6 +73,46 @@ export async function register(req, res) {
         console.error('Erreur inscription :', err.message);
         return res.status(500).json({
             error: 'Inscription impossible pour le moment. Veuillez réessayer.',
+        });
+    }
+}
+
+// Listes du formulaire de demande praticien (spécialités et cliniques).
+export async function practitionerOptions(req, res) {
+    try {
+        return res.json(await getPractitionerOptions());
+    } catch (err) {
+        console.error('Options praticien :', err.message);
+        return res.status(500).json({ error: 'Impossible de charger les listes pour le moment.' });
+    }
+}
+
+// Demande de compte praticien : enregistrée en attente de validation par un administrateur.
+export async function requestPractitioner(req, res) {
+    const { valid, errors, values } = validatePractitionerRequest(req.body);
+
+    if (!valid) {
+        return res.status(400).json({ error: 'Données invalides', fields: errors });
+    }
+
+    try {
+        await createPractitionerRequest(values, req.ip);
+
+        // Même réponse que l'adresse soit connue ou non : on ne révèle pas si un compte existe.
+        return res.status(201).json({
+            message:
+                'Demande envoyée. Elle sera examinée avant l\'activation de votre compte.',
+        });
+    } catch (err) {
+        if (err instanceof RegistrationError && err.code === 'BAD_CLINIQUE') {
+            return res.status(400).json({
+                error: 'Données invalides',
+                fields: { cliniqueId: 'Veuillez choisir une clinique' },
+            });
+        }
+        console.error('Demande praticien :', err.message);
+        return res.status(500).json({
+            error: 'Demande impossible pour le moment. Veuillez réessayer.',
         });
     }
 }

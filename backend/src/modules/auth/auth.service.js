@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import pool from '../../shared/utils/db.js';
+import { PRACTITIONER_SPECIALTIES } from '../../shared/utils/validators.js';
 import {
     createKeycloakUser,
     assignRealmRole,
@@ -163,4 +164,40 @@ export async function registerPatient(values, ip) {
     }
 
     return { id: newUserId };
+}
+
+// ---------------------------------------------------------------------------
+// Demande de compte praticien : simple enregistrement en attente de validation.
+// Aucun compte Keycloak ni profil `users` n'est créé ici.
+// ---------------------------------------------------------------------------
+
+export async function getPractitionerOptions() {
+    const cliniques = await pool.query('SELECT id, nom, ville FROM cliniques ORDER BY nom');
+    return { specialties: PRACTITIONER_SPECIALTIES, cliniques: cliniques.rows };
+}
+
+export async function createPractitionerRequest(values, ip) {
+    const { firstName, lastName, email, phone, specialty, cliniqueId, orderNumber } = values;
+
+    const clinique = await pool.query('SELECT 1 FROM cliniques WHERE id = $1', [cliniqueId]);
+    if (clinique.rows.length === 0) {
+        throw new RegistrationError('BAD_CLINIQUE');
+    }
+
+    // Email déjà utilisé par un compte : on ne le révèle pas (même réponse que pour une demande réussie).
+    const existing = await pool.query('SELECT 1 FROM users WHERE lower(email) = $1', [email]);
+    if (existing.rows.length > 0) {
+        return { created: false };
+    }
+
+    // Une seule demande en attente par email (index unique) : un doublon est ignoré sans erreur.
+    const inserted = await pool.query(
+        `INSERT INTO practitioner_requests
+            (first_name, last_name, email, phone, specialty, clinique_id, order_number, ip_address)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+         ON CONFLICT DO NOTHING
+         RETURNING id`,
+        [firstName, lastName, email, phone, specialty, cliniqueId, orderNumber, ip || null]
+    );
+    return { created: inserted.rows.length > 0 };
 }

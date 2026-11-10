@@ -1,65 +1,235 @@
-/* ===== MedLink : couleurs du site (turquoise #0ea5a5) ===== */
+/* ===== MedLink : page de connexion Keycloak (maquette « Connexion sécurisée ») ===== */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
 :root {
-  --medlink-primary: #0ea5a5;
-  --medlink-primary-dark: #0c8a8a;
-  --medlink-primary-50: #f0fdfa;
-  --medlink-secondary-container: #d1fae5;
-  --medlink-text: #0f172a;
-  --medlink-muted: #64748b;
+  --ml-primary: #0ea5a5;
+  --ml-teal: #028f82;
+  --ml-teal-dark: #027a6f;
+  --ml-mint: #a7f3d0;
+  --ml-text: #0f172a;
+  --ml-muted: #64748b;
+  --ml-border: #cbd5e1;
+  --ml-soft: #f1f5f9;
 
-  /* Variables PatternFly utilisées par Keycloak */
-  --pf-v5-global--primary-color--100: var(--medlink-primary);
-  --pf-v5-global--primary-color--200: var(--medlink-primary-dark);
-  --pf-v5-global--active-color--100: var(--medlink-primary);
-  --pf-v5-global--link--Color: var(--medlink-primary-dark);
-  --pf-v5-global--link--Color--hover: var(--medlink-primary);
-  --keycloak-card-top-color: var(--medlink-primary);
+  --pf-v5-global--primary-color--100: var(--ml-teal);
+  --pf-v5-global--primary-color--200: var(--ml-teal-dark);
+  --pf-v5-global--active-color--100: var(--ml-teal);
+  --pf-v5-global--link--Color: var(--ml-teal);
+  --pf-v5-global--link--Color--hover: var(--ml-teal-dark);
 }
 
-/* Fond : même dégradé que la page d'accueil */
-.login-pf body {
-  background: linear-gradient(135deg, var(--medlink-primary-50) 0%, #ffffff 50%, var(--medlink-secondary-container) 100%) no-repeat center center fixed;
-  background-size: cover;
+html, body { height: 100%; }
+body {
+  background: #fff !important;
+  font-family: "Plus Jakarta Sans", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: var(--ml-text);
 }
+a { color: var(--ml-teal); }
+a:hover { color: var(--ml-teal-dark); }
 
-/* Logo à la place du texte « MEDLINK » */
-#kc-header-wrapper {
-  font-size: 0 !important;
-  color: transparent !important;
-  height: 110px;
-  background: url('../img/logo-medlink.jpg') no-repeat center center / contain;
-  border-radius: 16px;
-  margin-bottom: 8px;
+/* ---------- Mise en page : panneau à gauche (55 %), formulaire à droite ---------- */
+.pf-v5-c-login {
+  display: grid !important;
+  grid-template-columns: 11fr 9fr;
+  grid-template-rows: minmax(100vh, auto);
+  align-items: start !important;          /* PatternFly mettait « center » : vide au-dessus du panneau */
+  padding: 0 !important;
+  min-height: 100vh;
+  background: #fff !important;
 }
+.pf-v5-c-login__container {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: none !important;
+  margin: 0 !important;
+  align-self: stretch;
+  min-height: 100vh;
+  padding: 1.5rem 2.5rem !important;
+  background: #fff;
+}
+#kc-header { display: none; }             /* le logo est dans le panneau de gauche */
 
-/* Carte du formulaire */
-.pf-v5-c-login__main {
-  border-radius: 16px;
+/* ---------- Panneau de gauche ---------- */
+.ml-side {
+  position: sticky;
+  top: 0;
+  height: 100vh;
   overflow: hidden;
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: clamp(32px, 7vh, 72px) clamp(32px, 5vw, 80px) 28px;
+  color: #fff;
+  background: linear-gradient(155deg, #0fa39a 0%, #00877a 52%, #02574f 100%);
 }
-.pf-v5-c-login__main-header {
-  border-top: 4px solid var(--medlink-primary);
+/* grand cercle décoratif en bas à droite */
+.ml-side::after {
+  content: "";
+  position: absolute;
+  right: -180px;
+  bottom: -230px;
+  width: 520px;
+  height: 520px;
+  border-radius: 50%;
+  border: 40px solid rgba(255, 255, 255, .06);
+  pointer-events: none;
+}
+.ml-side > * { position: relative; z-index: 1; }
+
+.ml-side__top { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.ml-side__brand { display: flex; align-items: center; gap: 16px; }
+.ml-side__logo { display: grid; place-items: center; width: 55px; height: 55px; border-radius: 14px; background: #fff; overflow: hidden; box-shadow: 0 4px 14px rgba(0, 0, 0, .12); }
+.ml-side__logo img { width: 46px; height: 46px; object-fit: contain; }
+.ml-side__name { font-size: 1.9rem; font-weight: 800; letter-spacing: -.01em; }
+.ml-dot { display: inline-block; width: 10px; height: 10px; margin-left: 6px; border-radius: 50%; background: var(--ml-mint); }
+.ml-side__badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 16px; border-radius: 999px;
+  font-size: .85rem; font-weight: 500;
+  background: rgba(255, 255, 255, .1);
+  border: 1px solid rgba(255, 255, 255, .25);
 }
 
-/* Bouton principal */
+.ml-side__body { margin: auto 0; padding: 24px 0; }
+.ml-side__title { margin: 0 0 20px; font-size: clamp(2.4rem, 4vw, 3.4rem); line-height: 1.1; font-weight: 800; letter-spacing: -.02em; color: #fff; }
+.ml-side__title span { color: var(--ml-mint); }
+.ml-side__text { max-width: 680px; margin: 0 0 28px; font-size: clamp(1rem, 1.5vw, 1.25rem); line-height: 1.6; color: rgba(255, 255, 255, .92); }
+.ml-side__features { margin: 0; padding: 0; list-style: none; display: grid; gap: 14px; }
+.ml-side__features li { display: flex; align-items: center; gap: 18px; font-size: 1.1rem; color: rgba(255, 255, 255, .95); }
+.ml-fi { display: grid; place-items: center; flex: none; width: 40px; height: 40px; border-radius: 10px; background: rgba(255, 255, 255, .14); border: 1px solid rgba(255, 255, 255, .2); }
+
+.ml-side__bottom {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+  padding-top: 28px; border-top: 1px solid rgba(255, 255, 255, .18);
+  font-size: .95rem; color: rgba(255, 255, 255, .75);
+}
+.ml-side__links { display: inline-flex; gap: 18px; align-items: center; }
+.ml-side__links i { font-style: normal; opacity: .7; }
+.ml-side__links a, .ml-side__links a:hover { color: rgba(255, 255, 255, .85); text-decoration: none; }
+.ml-side__links a:hover { color: #fff; text-decoration: underline; }
+
+/* ---------- Côté formulaire ---------- */
+.pf-v5-c-login__main {
+  display: block !important;
+  align-self: center;
+  width: 100%;
+  max-width: 560px;
+  background: transparent !important;
+  box-shadow: none !important;
+  border: 0 !important;
+}
+
+/* Onglets Patient / Praticien */
+.ml-tabs { display: grid; grid-template-columns: 1fr 1fr; align-items: stretch; align-content: start; gap: 6px; height: auto; min-height: 0; padding: 5px; margin: 0 0 28px; border-radius: 16px; background: var(--ml-soft); }
+.ml-tab {
+  flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  height: 50px; border: 0; border-radius: 12px; cursor: pointer;
+  font: inherit; font-size: 1rem; font-weight: 500;
+  color: #475569; background: transparent;
+  transition: background .15s, color .15s;
+}
+.ml-tab:hover { color: var(--ml-text); }
+.ml-tab.is-active { background: #fff; color: var(--ml-teal); font-weight: 700; box-shadow: 0 1px 4px rgba(15, 23, 42, .1); }
+
+.pf-v5-c-login__main-header { border-top: 0 !important; padding: 0 !important; margin: 0 !important; }
+.pf-v5-c-login__main-title, #kc-page-title {
+  margin: 0;
+  font-size: 2rem !important;
+  font-weight: 800;
+  letter-spacing: -.02em;
+  color: var(--ml-text);
+}
+.pf-v5-c-login__main-body { padding: 0 !important; }
+.ml-subtitle { margin: 8px 0 24px; font-size: 1rem; color: var(--ml-muted); }
+
+/* Champs */
+.ml-form { display: block; }
+.ml-field { margin-bottom: 18px; }
+.ml-label { display: block; font-size: .8rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #0b1b3a; }
+.ml-label-row { display: flex; align-items: baseline; justify-content: space-between; }
+.ml-label-row .ml-label { margin: 0; }
+.ml-field .ml-label { margin-bottom: 10px; }
+.ml-label-row { margin-bottom: 10px; }
+.ml-label-row .ml-label { margin-bottom: 0; }
+.ml-forgot { font-size: .85rem; font-weight: 700; text-decoration: none; color: var(--ml-teal); }
+.ml-forgot:hover { text-decoration: underline; }
+
+.ml-input {
+  position: relative;
+  display: flex; align-items: center; gap: 12px;
+  height: 52px; padding: 0 16px;
+  border: 1px solid var(--ml-border); border-radius: 12px; background: #fff;
+  color: #94a3b8;
+  transition: border-color .15s, box-shadow .15s;
+}
+.ml-input:focus-within { border-color: var(--ml-teal); box-shadow: 0 0 0 3px rgba(2, 143, 130, .15); color: var(--ml-teal); }
+.ml-input--error { border-color: #dc2626; }
+.ml-input input {
+  flex: 1; min-width: 0; height: 100%;
+  border: 0 !important; outline: 0; background: transparent; box-shadow: none !important;
+  font: inherit; font-size: 1rem; color: var(--ml-text);
+}
+.ml-eye { display: grid; place-items: center; width: 36px; height: 36px; border: 0; border-radius: 8px; background: transparent; color: #64748b; cursor: pointer; }
+.ml-eye:hover { background: var(--ml-soft); color: var(--ml-text); }
+.ml-error { margin-top: 8px; font-size: .85rem; color: #dc2626; }
+
+/* Se souvenir de moi + badge SSL */
+.ml-row { display: flex; align-items: center; justify-content: space-between; margin: 20px 0 22px; }
+.ml-check { display: inline-flex; align-items: center; gap: 12px; margin: 0; font-size: .95rem; color: #475569; cursor: pointer; }
+.ml-check input { width: 18px; height: 18px; margin: 0; accent-color: var(--ml-teal); }
+.ml-ssl { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px; font-size: .8rem; font-weight: 600; color: #047857; background: #ecfdf5; border: 1px solid #d1fae5; }
+
+/* Bouton */
+.ml-btn {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  width: 100%; height: 56px; border: 0; border-radius: 12px; cursor: pointer;
+  font: inherit; font-size: 1rem; font-weight: 700; color: #fff;
+  background: var(--ml-teal);
+  box-shadow: 0 8px 18px rgba(2, 143, 130, .28);
+  transition: background .15s, transform .05s;
+}
+.ml-btn:hover { background: var(--ml-teal-dark); }
+.ml-btn:active { transform: translateY(1px); }
+.ml-btn:disabled { opacity: .7; cursor: wait; }
+
+/* Bas du formulaire : séparateur, lien d'inscription, encart */
+.pf-v5-c-login__main-footer { padding: 0 !important; }
+#kc-info { padding: 0 !important; margin: 0 !important; border: 0 !important; }
+#kc-info-wrapper { padding: 0 !important; }
+#kc-registration-container { margin-top: 26px; padding-top: 22px; border-top: 1px solid #eef2f6; }
+#kc-registration { text-align: center; font-size: 1rem; color: var(--ml-muted); }
+#kc-registration a { font-weight: 700; text-decoration: none; }
+#kc-registration a:hover { text-decoration: underline; }
+#kc-registration [hidden] { display: none; }
+
+.ml-note { display: flex; align-items: center; gap: 14px; margin-top: 20px; padding: 14px 18px; border-radius: 14px; background: #f8fafc; border: 1px solid #eef2f6; }
+.ml-note p { margin: 0; font-size: .85rem; line-height: 1.5; color: #475569; }
+.ml-note__icon { display: grid; place-items: center; flex: none; width: 40px; height: 40px; border-radius: 50%; color: var(--ml-teal); background: #d1fae5; }
+
+/* ---------- Autres pages Keycloak (mot de passe oublié, vérification email...) ---------- */
 .pf-v5-c-button.pf-m-primary {
-  --pf-v5-c-button--m-primary--BackgroundColor: var(--medlink-primary);
-  --pf-v5-c-button--m-primary--hover--BackgroundColor: var(--medlink-primary-dark);
-  --pf-v5-c-button--m-primary--focus--BackgroundColor: var(--medlink-primary-dark);
-  --pf-v5-c-button--m-primary--active--BackgroundColor: var(--medlink-primary-dark);
-  border-radius: 8px;
-  font-weight: 600;
+  --pf-v5-c-button--m-primary--BackgroundColor: var(--ml-teal);
+  --pf-v5-c-button--m-primary--hover--BackgroundColor: var(--ml-teal-dark);
+  --pf-v5-c-button--m-primary--focus--BackgroundColor: var(--ml-teal-dark);
+  --pf-v5-c-button--m-primary--active--BackgroundColor: var(--ml-teal-dark);
+  border-radius: 12px;
+  min-height: 48px;
+  font-weight: 700;
 }
+.pf-v5-c-form-control { border-radius: 12px; }
+.pf-v5-c-form-control:focus-within { --pf-v5-c-form-control--focus--BorderBottomColor: var(--ml-teal); }
 
-/* Champs de saisie : bordure turquoise au focus */
-.pf-v5-c-form-control:focus-within,
-.pf-v5-c-form-control:focus {
-  --pf-v5-c-form-control--focus--BorderBottomColor: var(--medlink-primary);
-  --pf-v5-c-form-control--hover--BorderBottomColor: var(--medlink-primary);
-  border-color: var(--medlink-primary);
+/* ---------- Écrans moyens / mobiles ---------- */
+@media (max-width: 1200px) {
+  .ml-side { padding: 56px 48px 28px; }
+  .ml-side__title { font-size: 2.6rem; }
+  .ml-side__text { font-size: 1.05rem; }
+  .ml-side__badge { display: none; }
 }
-
-/* Liens (mot de passe oublié, etc.) */
-a { color: var(--medlink-primary-dark); }
-a:hover { color: var(--medlink-primary); }
+@media (max-width: 900px) {
+  .pf-v5-c-login { grid-template-columns: 1fr; }
+  .ml-side { display: none; }
+  .pf-v5-c-login__container { padding: 1.5rem 1.25rem !important; }
+}
