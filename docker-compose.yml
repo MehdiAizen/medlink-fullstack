@@ -31,7 +31,13 @@ services:
       - DB_USER=medlink
       - DB_PASSWORD=medlink_secret
       - DB_NAME=medlink
-      - JWT_SECRET=ton_super_secret_jwt
+      - JWT_SECRET=medlink_super_secret_jwt_2026
+      - ALLOW_LEGACY_AUTH=true
+      - KEYCLOAK_URL=http://keycloak:8080
+      - KEYCLOAK_PUBLIC_URL=http://localhost:8080
+      - KEYCLOAK_REALM=medlink
+      - KEYCLOAK_ADMIN_CLIENT_ID=admin
+      - KEYCLOAK_ADMIN_CLIENT_SECRET=admin
     depends_on:
       db:
         condition: service_healthy
@@ -44,6 +50,19 @@ services:
       - "3000:80"
     depends_on:
       - backend
+
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.4
+    container_name: medlink-keycloak
+    command: start-dev --import-realm
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./keycloak/medlink-realm.json:/opt/keycloak/data/import/medlink-realm.json:ro
 
 volumes:
   postgres_data:
