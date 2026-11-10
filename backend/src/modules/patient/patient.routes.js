@@ -1,10 +1,25 @@
 import { Router } from "express";
+import rateLimit from "express-rate-limit";
 import { authenticate, requireRole } from "../../shared/middleware/auth.js";
 import {
   getPractitioners,
   getAppointments,
   createAppointment,
+  cancelAppointment,
+  rescheduleAppointment,
+  getResults,
 } from "./patient.controller.js";
+
+const bookingLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  message: {
+    error:
+      "Trop de tentatives de réservation. Veuillez réessayer dans 15 minutes.",
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 const router = Router();
 
@@ -91,6 +106,86 @@ router.get("/appointments", getAppointments);
  *       409:
  *         description: Créneau déjà réservé
  */
-router.post("/appointments", createAppointment);
+router.post("/appointments", bookingLimiter, createAppointment);
+
+/**
+ * @openapi
+ * /api/patient/appointments/{id}/cancel:
+ *   patch:
+ *     summary: Annuler un rendez-vous
+ *     tags: [Patient - M2]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID du rendez-vous
+ *     responses:
+ *       200:
+ *         description: Rendez-vous annulé
+ *       400:
+ *         description: Impossible d'annuler (déjà annulé)
+ *       404:
+ *         description: Rendez-vous introuvable
+ */
+router.patch("/appointments/:id/cancel", cancelAppointment);
+
+/**
+ * @openapi
+ * /api/patient/appointments/{id}/reschedule:
+ *   patch:
+ *     summary: Reporter un rendez-vous
+ *     tags: [Patient - M2]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [appointment_date, appointment_time]
+ *             properties:
+ *               appointment_date:
+ *                 type: string
+ *                 format: date
+ *                 example: "2026-12-20"
+ *               appointment_time:
+ *                 type: string
+ *                 example: "14:30"
+ *     responses:
+ *       200:
+ *         description: Rendez-vous reporté avec succès
+ *       400:
+ *         description: Créneau indisponible ou données invalides
+ *       404:
+ *         description: Rendez-vous introuvable
+ */
+router.patch("/appointments/:id/reschedule", rescheduleAppointment);
+
+/**
+ * @openapi
+ * /api/patient/records/results:
+ *   get:
+ *     summary: Récupère les résultats d'analyses du patient (avec journalisation)
+ *     tags: [Patient - M2]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Liste des résultats
+ *       401:
+ *         description: Non authentifié
+ */
+router.get("/records/results", getResults);
 
 export default router;

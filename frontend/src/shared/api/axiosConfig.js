@@ -49,7 +49,23 @@ export const api = {
           method: "POST",
           body: JSON.stringify(data),
         }),
+
+      cancel: (id) =>
+        request(`/patient/appointments/${id}/cancel`, {
+          method: "PATCH",
+        }),
+
+      reschedule: (id, data) =>
+        request(`/patient/appointments/${id}/reschedule`, {
+          method: "PATCH",
+          body: JSON.stringify(data),
+        }),
     },
+
+    cancel: (id) =>
+      request(`/patient/appointments/${id}/cancel`, {
+        method: "PATCH",
+      }),
 
     records: {
       list: () => request("/patient/records"),
