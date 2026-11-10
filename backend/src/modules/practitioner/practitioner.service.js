@@ -106,7 +106,7 @@ export async function searchMyPatients(practitionerId, q = '') {
      WHERE u.role = 'patient'
        AND (EXISTS (SELECT 1 FROM appointments a WHERE a.patient_id = u.id AND a.practitioner_id = $1)
             OR EXISTS (SELECT 1 FROM medical_records m WHERE m.patient_id = u.id AND m.practitioner_id = $1))
-       AND ($2 = '%%' OR u.full_name ILIKE $2 OR u.email ILIKE $2 OR CAST(u.id AS TEXT) = TRIM($3))
+       AND ($2 = '%%' OR u.full_name ILIKE $2 OR u.email ILIKE $2 OR u.phone ILIKE $2 OR CAST(u.id AS TEXT) = TRIM($3))
      ORDER BY last_appointment DESC NULLS LAST, u.full_name ASC
      LIMIT 50`,
     [practitionerId, term, q.trim()]

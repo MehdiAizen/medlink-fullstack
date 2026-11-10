@@ -79,18 +79,18 @@ export default function Disponibilites() {
     }
   };
 
-  if (loading) return <div className="p-6 text-gray-500 flex items-center justify-center h-64">Chargement des données...</div>;
+  if (loading) return <div className="p-6 text-on-variant flex items-center justify-center h-64">Chargement des données...</div>;
 
   return (
     <div className="space-y-6">
       <header className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Gestion de mes disponibilités</h1>
-        <p className="text-gray-500">Définissez vos plages horaires de consultation ou signalez vos absences.</p>
+        <h1 className="text-2xl font-bold text-on-surface">Gestion de mes disponibilités</h1>
+        <p className="text-on-variant">Définissez vos plages horaires de consultation ou signalez vos absences.</p>
       </header>
 
       {/* Formulaire d'ajout */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Ajouter une période</h2>
+      <div className="bg-surface rounded-xl border border-outline-variant p-6 shadow-sm">
+        <h2 className="text-lg font-semibold text-on-surface mb-4">Ajouter une période</h2>
         
         {message.text && (
           <div className={`mb-4 p-3 rounded-lg text-sm ${message.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
@@ -200,10 +200,10 @@ export default function Disponibilites() {
       </div>
 
       {/* Liste des périodes */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-        <div className="p-6 border-b border-gray-200 flex justify-between items-center">
-          <h2 className="text-lg font-semibold text-gray-900">Historique de mes périodes</h2>
-          <span className="text-sm text-gray-500">{slots.length} période(s) enregistrée(s)</span>
+      <div className="bg-surface rounded-xl border border-outline-variant shadow-sm overflow-hidden">
+        <div className="p-6 border-b border-outline-variant flex justify-between items-center">
+          <h2 className="text-lg font-semibold text-on-surface">Historique de mes périodes</h2>
+          <span className="text-sm text-on-variant">{slots.length} période(s) enregistrée(s)</span>
         </div>
         
         {slots.length > 0 ? (
@@ -222,8 +222,8 @@ export default function Disponibilites() {
               <tbody className="divide-y divide-gray-200">
                 {slots.map((slot) => (
                   <tr key={slot.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4 font-medium text-gray-900">
-                      {slot.clinic_name} <span className="text-gray-500 text-xs">({slot.clinic_city})</span>
+                    <td className="px-6 py-4 font-medium text-on-surface">
+                      {slot.clinic_name} <span className="text-on-variant text-xs">({slot.clinic_city})</span>
                     </td>
                     <td className="px-6 py-4 text-gray-700 whitespace-nowrap">
                       {new Date(slot.date_debut).toLocaleDateString('fr-FR')} 
@@ -244,7 +244,7 @@ export default function Disponibilites() {
                          slot.type === 'absence' ? 'Absence' : 'Bloqué'}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-gray-500 italic max-w-xs truncate" title={slot.motif}>
+                    <td className="px-6 py-4 text-on-variant italic max-w-xs truncate" title={slot.motif}>
                       {slot.motif || '-'}
                     </td>
                     <td className="px-6 py-4 text-right">
@@ -270,7 +270,7 @@ export default function Disponibilites() {
             </table>
           </div>
         ) : (
-          <div className="p-12 text-center text-gray-500">
+          <div className="p-12 text-center text-on-variant">
             <svg className="w-16 h-16 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>

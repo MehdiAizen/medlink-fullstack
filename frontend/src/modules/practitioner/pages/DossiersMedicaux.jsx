@@ -151,13 +151,13 @@ export default function DossiersMedicaux() {
   return (
     <div className="p-6 space-y-6">
       {/* En-tête du dossier */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-surface p-6 rounded-xl border border-outline-variant shadow-sm">
         <div>
-          <button onClick={() => navigate('/app/patients')} className="text-sm text-gray-500 hover:text-teal-600 mb-2 flex items-center gap-1">
+          <button onClick={() => navigate('/app/patients')} className="text-sm text-on-variant hover:text-primary mb-2 flex items-center gap-1">
             ← Retour à la liste
           </button>
-          <h1 className="text-2xl font-bold text-gray-900">Dossier médical de : {data.patient?.full_name}</h1>
-          <p className="text-gray-500 mt-1">📞 {data.patient?.phone || 'Non renseigné'} • ✉️ {data.patient?.email}</p>
+          <h1 className="text-2xl font-bold text-on-surface">Dossier médical de : {data.patient?.full_name}</h1>
+          <p className="text-on-variant mt-1">📞 {data.patient?.phone || 'Non renseigné'} • ✉️ {data.patient?.email}</p>
         </div>
         <div className="flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 rounded-full text-sm font-semibold border border-emerald-200">
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
@@ -174,9 +174,9 @@ export default function DossiersMedicaux() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Colonne 1 : Comptes-rendus (US-24, US-26) */}
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+        <div className="bg-surface rounded-xl border border-outline-variant shadow-sm p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">📝 Comptes-rendus</h2>
+            <h2 className="text-lg font-semibold text-on-surface flex items-center gap-2">📝 Comptes-rendus</h2>
             <button 
               onClick={() => setShowForm(!showForm)}
               className="text-sm px-3 py-1.5 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors"
@@ -187,7 +187,7 @@ export default function DossiersMedicaux() {
 
           {/* ✅ Formulaire de rédaction (US-24) */}
           {showForm && (
-            <form onSubmit={handleSubmitRecord} className="mb-6 p-4 bg-teal-50 rounded-lg border border-teal-200 space-y-3">
+            <form onSubmit={handleSubmitRecord} className="mb-6 p-4 bg-primary-50 rounded-lg border border-teal-200 space-y-3">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Titre *</label>
                 <input
@@ -245,24 +245,24 @@ export default function DossiersMedicaux() {
               {data.records.map((record) => (
                 <div key={record.id} className="p-4 bg-gray-50 rounded-lg border border-gray-100">
                   <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-semibold text-gray-900">{record.title}</h3>
-                    <span className="text-xs text-gray-500 bg-white px-2 py-1 rounded border">{new Date(record.record_date).toLocaleDateString('fr-FR')}</span>
+                    <h3 className="font-semibold text-on-surface">{record.title}</h3>
+                    <span className="text-xs text-on-variant bg-surface px-2 py-1 rounded border">{new Date(record.record_date).toLocaleDateString('fr-FR')}</span>
                   </div>
-                  <p className="text-sm text-gray-700 mb-2"><strong className="text-gray-900">Diagnostic :</strong> {record.diagnosis || 'Non spécifié'}</p>
-                  <p className="text-sm text-gray-600 italic bg-white p-3 rounded border border-gray-100">{record.notes}</p>
+                  <p className="text-sm text-gray-700 mb-2"><strong className="text-on-surface">Diagnostic :</strong> {record.diagnosis || 'Non spécifié'}</p>
+                  <p className="text-sm text-gray-600 italic bg-surface p-3 rounded border border-gray-100">{record.notes}</p>
                   <p className="text-xs text-gray-400 mt-2 text-right">Par Dr. {record.practitioner_name}</p>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg border border-dashed border-gray-300">Aucun compte-rendu. Cliquez sur "+ Nouveau compte-rendu" pour en créer un.</p>
+            <p className="text-center py-8 text-on-variant bg-gray-50 rounded-lg border border-dashed border-gray-300">Aucun compte-rendu. Cliquez sur "+ Nouveau compte-rendu" pour en créer un.</p>
           )}
         </div>
 
         {/* Colonne 2 : Résultats d'examens (US-25) */}
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+        <div className="bg-surface rounded-xl border border-outline-variant shadow-sm p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">🧪 Résultats d'examens</h2>
+            <h2 className="text-lg font-semibold text-on-surface flex items-center gap-2">🧪 Résultats d'examens</h2>
             <button 
               onClick={() => setShowResultForm(!showResultForm)}
               className="text-sm px-3 py-1.5 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors"
@@ -346,7 +346,7 @@ export default function DossiersMedicaux() {
               {data.labResults.map((lab) => (
                 <div key={lab.id} className="p-4 bg-gray-50 rounded-lg border border-gray-100 flex justify-between items-center">
                   <div>
-                    <p className="font-medium text-gray-900">{lab.test_name}</p>
+                    <p className="font-medium text-on-surface">{lab.test_name}</p>
                     <p className="text-sm text-gray-600 mt-1">Résultat : <strong>{lab.result_value} {lab.unit}</strong> <span className="text-gray-400 mx-1">|</span> Réf : {lab.reference_range}</p>
                   </div>
                   <span className={`px-3 py-1 text-xs font-semibold rounded-full ${
@@ -359,7 +359,7 @@ export default function DossiersMedicaux() {
               ))}
             </div>
           ) : (
-            <p className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg border border-dashed border-gray-300">Aucun résultat. Cliquez sur "+ Publier un résultat".</p>
+            <p className="text-center py-8 text-on-variant bg-gray-50 rounded-lg border border-dashed border-gray-300">Aucun résultat. Cliquez sur "+ Publier un résultat".</p>
           )}
         </div>
       </div>

@@ -89,19 +89,19 @@ export default function ComptesRendus() {
   return (
     <div className="p-6 space-y-6">
       <header className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Comptes-rendus de consultation</h1>
-        <p className="text-gray-500 mt-2">Rédigez et consultez l'historique des comptes-rendus médicaux.</p>
+        <h1 className="text-3xl font-bold text-on-surface">Comptes-rendus de consultation</h1>
+        <p className="text-on-variant mt-2">Rédigez et consultez l'historique des comptes-rendus médicaux.</p>
       </header>
 
       {/* Formulaire de rédaction */}
-      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+      <div className="bg-surface rounded-2xl border border-outline-variant shadow-sm p-6">
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 rounded-lg bg-teal-50 flex items-center justify-center">
-            <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="w-10 h-10 rounded-lg bg-primary-50 flex items-center justify-center">
+            <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
           </div>
-          <h2 className="text-xl font-semibold text-gray-900">Nouveau compte-rendu</h2>
+          <h2 className="text-xl font-semibold text-on-surface">Nouveau compte-rendu</h2>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
@@ -122,7 +122,7 @@ export default function ComptesRendus() {
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
               />
               {searchTerm && filteredPatients.length > 0 && (
-                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-auto">
+                <div className="absolute z-10 w-full mt-1 bg-surface border border-outline-variant rounded-lg shadow-lg max-h-60 overflow-auto">
                   {filteredPatients.map((patient) => (
                     <button
                       key={patient.id}
@@ -134,11 +134,11 @@ export default function ComptesRendus() {
                       className="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center justify-between border-b border-gray-100 last:border-0"
                     >
                       <div>
-                        <p className="font-medium text-gray-900">{patient.full_name}</p>
-                        <p className="text-sm text-gray-500">{patient.phone}</p>
+                        <p className="font-medium text-on-surface">{patient.full_name}</p>
+                        <p className="text-sm text-on-variant">{patient.phone}</p>
                       </div>
                       {form.patient_id === patient.id && (
-                        <span className="text-teal-600 text-sm font-medium">✓ Sélectionné</span>
+                        <span className="text-primary text-sm font-medium">✓ Sélectionné</span>
                       )}
                     </button>
                   ))}
@@ -244,7 +244,7 @@ export default function ComptesRendus() {
       </div>
 
       {/* Historique des comptes-rendus */}
-      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+      <div className="bg-surface rounded-2xl border border-outline-variant shadow-sm p-6">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
@@ -252,7 +252,7 @@ export default function ComptesRendus() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <h2 className="text-xl font-semibold text-gray-900">Historique des comptes-rendus</h2>
+            <h2 className="text-xl font-semibold text-on-surface">Historique des comptes-rendus</h2>
           </div>
           <span className="px-3 py-1 text-sm font-medium bg-gray-100 text-gray-700 rounded-full">
             {records.length} document{records.length > 1 ? 's' : ''}
@@ -264,17 +264,17 @@ export default function ComptesRendus() {
             <svg className="w-16 h-16 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
-            <p className="text-gray-500 font-medium">Aucun compte-rendu enregistré</p>
+            <p className="text-on-variant font-medium">Aucun compte-rendu enregistré</p>
             <p className="text-sm text-gray-400 mt-1">Les comptes-rendus que vous rédigerez apparaîtront ici.</p>
           </div>
         ) : (
           <div className="space-y-4">
             {records.map((record) => (
-              <div key={record.id} className="border border-gray-200 rounded-xl p-5 hover:shadow-md transition-shadow bg-gray-50/50">
+              <div key={record.id} className="border border-outline-variant rounded-xl p-5 hover:shadow-md transition-shadow bg-gray-50/50">
                 <div className="flex items-start justify-between mb-3">
                   <div>
-                    <h3 className="font-semibold text-gray-900 text-lg">{record.title}</h3>
-                    <p className="text-sm text-gray-500 mt-1">
+                    <h3 className="font-semibold text-on-surface text-lg">{record.title}</h3>
+                    <p className="text-sm text-on-variant mt-1">
                       Patient: <span className="font-medium text-gray-700">{record.patient_name}</span>
                       {' • '}
                       {new Date(record.record_date).toLocaleDateString('fr-FR')}
@@ -288,7 +288,7 @@ export default function ComptesRendus() {
                 {record.diagnosis && (
                   <div className="mb-3">
                     <p className="text-sm font-medium text-gray-700 mb-1">Diagnostic:</p>
-                    <p className="text-sm text-gray-600 bg-white p-3 rounded-lg border border-gray-200">
+                    <p className="text-sm text-gray-600 bg-surface p-3 rounded-lg border border-outline-variant">
                       {record.diagnosis}
                     </p>
                   </div>
@@ -297,7 +297,7 @@ export default function ComptesRendus() {
                 {record.notes && (
                   <div>
                     <p className="text-sm font-medium text-gray-700 mb-1">Notes:</p>
-                    <p className="text-sm text-gray-600 bg-white p-3 rounded-lg border border-gray-200 italic">
+                    <p className="text-sm text-gray-600 bg-surface p-3 rounded-lg border border-outline-variant italic">
                       {record.notes}
                     </p>
                   </div>

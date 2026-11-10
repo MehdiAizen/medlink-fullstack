@@ -64,18 +64,18 @@ export default function Dashboard() {
 
             {/* Statistiques rapides */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-outline-variant">
+                <div className="bg-surface p-6 rounded-xl shadow-sm border border-outline-variant">
                     <h3 className="text-sm font-semibold text-on-variant">Rendez-vous aujourd'hui</h3>
                     <p className="text-3xl font-bold text-primary mt-2">{stats.appointmentsToday}</p>
                 </div>
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-outline-variant">
+                <div className="bg-surface p-6 rounded-xl shadow-sm border border-outline-variant">
                     <h3 className="text-sm font-semibold text-on-variant">Cliniques actives</h3>
                     <p className="text-3xl font-bold text-primary mt-2">3</p> {/* Sousse, Sfax, Tunis */}
                 </div>
             </div>
 
             {/* Prochains rendez-vous (US-19 : Agenda multi-sites) */}
-            <div className="bg-white rounded-xl shadow-sm border border-outline-variant p-6">
+            <div className="bg-surface rounded-xl shadow-sm border border-outline-variant p-6">
                 <h2 className="text-lg font-bold text-on-surface mb-4">Prochains rendez-vous</h2>
                 {stats.nextAppointments && stats.nextAppointments.length > 0 ? (
                     <ul className="space-y-3">

@@ -57,12 +57,12 @@ export default function Agenda() {
     <div className="p-6 space-y-6">
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Agenda Multi-Sites (US-19)</h1>
-          <p className="text-gray-500">Vue unifiée de vos consultations à Sousse, Sfax et Tunis.</p>
+          <h1 className="text-2xl font-bold text-on-surface">Agenda Multi-Sites (US-19)</h1>
+          <p className="text-on-variant">Vue unifiée de vos consultations à Sousse, Sfax et Tunis.</p>
         </div>
         
         {/* Filtres de statut (US-20) */}
-        <div className="flex gap-2 bg-white p-1 rounded-lg border border-gray-200 shadow-sm">
+        <div className="flex gap-2 bg-surface p-1 rounded-lg border border-outline-variant shadow-sm">
           {[
             { key: 'all', label: 'Tous' },
             { key: 'pending', label: 'En attente' },
@@ -84,31 +84,31 @@ export default function Agenda() {
 
       {/* Liste groupée par jour */}
       {Object.keys(groupedByDate).length === 0 ? (
-        <div className="text-center py-12 bg-white rounded-xl border border-gray-200 shadow-sm">
-          <p className="text-gray-500 text-lg">📅 Aucun rendez-vous trouvé pour ce filtre.</p>
+        <div className="text-center py-12 bg-surface rounded-xl border border-outline-variant shadow-sm">
+          <p className="text-on-variant text-lg">📅 Aucun rendez-vous trouvé pour ce filtre.</p>
         </div>
       ) : (
         <div className="space-y-8">
           {Object.entries(groupedByDate).map(([date, dayAppts]) => (
             <div key={date}>
-              <h2 className="text-lg font-semibold text-gray-900 mb-4 capitalize flex items-center gap-2 border-b border-gray-200 pb-2">
+              <h2 className="text-lg font-semibold text-on-surface mb-4 capitalize flex items-center gap-2 border-b border-outline-variant pb-2">
                 📅 {date}
-                <span className="text-sm font-normal text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">{dayAppts.length} RDV</span>
+                <span className="text-sm font-normal text-on-variant bg-gray-100 px-2 py-0.5 rounded-full">{dayAppts.length} RDV</span>
               </h2>
               
               <div className="space-y-3">
                 {dayAppts.map((appt) => (
-                  <div key={appt.id} className="bg-white rounded-xl border border-gray-200 p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:shadow-md transition-shadow">
+                  <div key={appt.id} className="bg-surface rounded-xl border border-outline-variant p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:shadow-md transition-shadow">
                     
                     {/* Heure et Patient */}
                     <div className="flex items-center gap-4 flex-1">
-                      <div className="flex flex-col items-center justify-center w-16 h-16 bg-teal-50 rounded-lg text-teal-700 shrink-0">
+                      <div className="flex flex-col items-center justify-center w-16 h-16 bg-primary-50 rounded-lg text-teal-700 shrink-0">
                         <span className="text-xs font-medium uppercase">Heure</span>
                         <span className="text-lg font-bold">{appt.appointment_time?.slice(0, 5)}</span>
                       </div>
                       <div>
-                        <p className="font-bold text-gray-900 text-lg">{appt.patient_name}</p>
-                        <p className="text-sm text-gray-500 flex items-center gap-2 mt-1">
+                        <p className="font-bold text-on-surface text-lg">{appt.patient_name}</p>
+                        <p className="text-sm text-on-variant flex items-center gap-2 mt-1">
                           <span>{appt.reason || appt.type || 'Consultation'}</span>
                           <span className="text-gray-300">•</span>
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-gray-100 text-gray-700 text-xs font-medium">

@@ -105,29 +105,29 @@ export default function Patients() {
     <div className="p-6 space-y-6">
       {/* En-tête */}
       <header>
-        <h1 className="text-3xl font-bold text-gray-900">Mes patients</h1>
-        <p className="text-gray-500 mt-2">
-          Recherche parmi les patients que vous avez reçus en consultation (US-22)
+        <h1 className="text-3xl font-bold text-on-surface">Mes patients</h1>
+        <p className="text-on-variant mt-2">
+          Recherche parmi les patients que vous avez reçus en consultation
         </p>
       </header>
 
       {/* Statistiques */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+        <div className="bg-surface p-4 rounded-xl border border-outline-variant shadow-sm">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-teal-50 flex items-center justify-center">
-              <svg className="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-10 h-10 rounded-lg bg-primary-50 flex items-center justify-center">
+              <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
             </div>
             <div>
-              <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
-              <p className="text-xs text-gray-500">Total patients</p>
+              <p className="text-2xl font-bold text-on-surface">{stats.total}</p>
+              <p className="text-xs text-on-variant">Total patients</p>
             </div>
           </div>
         </div>
         
-        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+        <div className="bg-surface p-4 rounded-xl border border-outline-variant shadow-sm">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center">
               <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -135,13 +135,13 @@ export default function Patients() {
               </svg>
             </div>
             <div>
-              <p className="text-2xl font-bold text-gray-900">{stats.active}</p>
-              <p className="text-xs text-gray-500">Actifs (30j)</p>
+              <p className="text-2xl font-bold text-on-surface">{stats.active}</p>
+              <p className="text-xs text-on-variant">Actifs (30j)</p>
             </div>
           </div>
         </div>
         
-        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+        <div className="bg-surface p-4 rounded-xl border border-outline-variant shadow-sm">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center">
               <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -149,13 +149,13 @@ export default function Patients() {
               </svg>
             </div>
             <div>
-              <p className="text-2xl font-bold text-gray-900">{stats.inactive}</p>
-              <p className="text-xs text-gray-500">Inactifs</p>
+              <p className="text-2xl font-bold text-on-surface">{stats.inactive}</p>
+              <p className="text-xs text-on-variant">Inactifs</p>
             </div>
           </div>
         </div>
         
-        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+        <div className="bg-surface p-4 rounded-xl border border-outline-variant shadow-sm">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
               <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -163,15 +163,15 @@ export default function Patients() {
               </svg>
             </div>
             <div>
-              <p className="text-2xl font-bold text-gray-900">{stats.totalConsultations}</p>
-              <p className="text-xs text-gray-500">Consultations</p>
+              <p className="text-2xl font-bold text-on-surface">{stats.totalConsultations}</p>
+              <p className="text-xs text-on-variant">Consultations</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Barre de recherche */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+      <div className="bg-surface rounded-xl border border-outline-variant p-6 shadow-sm">
         <div className="relative max-w-2xl">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -191,13 +191,13 @@ export default function Patients() {
             </div>
           )}
         </div>
-        <p className="text-sm text-gray-500 mt-2">
+        <p className="text-sm text-on-variant mt-2">
           💡 Tapez au moins 1 caractère pour lancer la recherche
         </p>
       </div>
 
       {/* Filtres et contrôles */}
-      <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+      <div className="bg-surface rounded-xl border border-outline-variant p-4 shadow-sm">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex flex-col md:flex-row gap-4 flex-1">
             {/* Filtre par activité */}
@@ -236,7 +236,7 @@ export default function Patients() {
               <button
                 onClick={() => setViewMode('list')}
                 className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                  viewMode === 'list' ? 'bg-white text-teal-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+                  viewMode === 'list' ? 'bg-surface text-primary shadow-sm' : 'text-gray-600 hover:text-on-surface'
                 }`}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -246,7 +246,7 @@ export default function Patients() {
               <button
                 onClick={() => setViewMode('grid')}
                 className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                  viewMode === 'grid' ? 'bg-white text-teal-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+                  viewMode === 'grid' ? 'bg-surface text-primary shadow-sm' : 'text-gray-600 hover:text-on-surface'
                 }`}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -258,11 +258,11 @@ export default function Patients() {
         </div>
 
         {/* Récapitulatif */}
-        <div className="mt-4 pt-4 border-t border-gray-200 flex items-center justify-between">
+        <div className="mt-4 pt-4 border-t border-outline-variant flex items-center justify-between">
           <span className="text-sm text-gray-600">
             {filteredAndSortedPatients.length} patient{filteredAndSortedPatients.length > 1 ? 's' : ''} trouvé{filteredAndSortedPatients.length > 1 ? 's' : ''}
           </span>
-          <span className="text-xs text-gray-500 flex items-center gap-1">
+          <span className="text-xs text-on-variant flex items-center gap-1">
             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
             </svg>
@@ -283,14 +283,14 @@ export default function Patients() {
 
       {/* Liste des patients */}
       {filteredAndSortedPatients.length === 0 ? (
-        <div className="bg-white rounded-xl border border-dashed border-gray-300 py-16 text-center">
+        <div className="bg-surface rounded-xl border border-dashed border-gray-300 py-16 text-center">
           <svg className="w-16 h-16 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
           </svg>
-          <p className="text-gray-900 font-medium text-lg">
+          <p className="text-on-surface font-medium text-lg">
             {searchTerm ? 'Aucun patient ne correspond à votre recherche.' : 'Aucun patient trouvé.'}
           </p>
-          <p className="text-gray-500 text-sm mt-1">
+          <p className="text-on-variant text-sm mt-1">
             Les patients apparaissent ici après leur première consultation avec vous.
           </p>
         </div>
@@ -302,7 +302,7 @@ export default function Patients() {
             return (
               <div 
                 key={patient.id} 
-                className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition-all duration-200"
+                className="bg-surface rounded-xl border border-outline-variant p-5 hover:shadow-md transition-all duration-200"
               >
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                   {/* Informations patient */}
@@ -317,14 +317,14 @@ export default function Patients() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <p className="font-bold text-gray-900 text-lg">{patient.full_name}</p>
+                        <p className="font-bold text-on-surface text-lg">{patient.full_name}</p>
                         {active && (
                           <span className="px-2 py-0.5 text-xs font-medium bg-emerald-100 text-emerald-700 rounded-full border border-emerald-200">
                             Actif
                           </span>
                         )}
                       </div>
-                      <div className="flex flex-wrap items-center gap-3 mt-1 text-sm text-gray-500">
+                      <div className="flex flex-wrap items-center gap-3 mt-1 text-sm text-on-variant">
                         <span className="flex items-center gap-1">
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
@@ -382,7 +382,7 @@ export default function Patients() {
             return (
               <div 
                 key={patient.id} 
-                className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-lg transition-all duration-200"
+                className="bg-surface rounded-xl border border-outline-variant p-5 hover:shadow-lg transition-all duration-200"
               >
                 <div className="flex items-start justify-between mb-4">
                   <div className="relative">
@@ -400,7 +400,7 @@ export default function Patients() {
                   )}
                 </div>
                 
-                <h3 className="font-bold text-gray-900 text-lg mb-2">{patient.full_name}</h3>
+                <h3 className="font-bold text-on-surface text-lg mb-2">{patient.full_name}</h3>
                 
                 <div className="space-y-2 text-sm text-gray-600 mb-4">
                   <p className="flex items-center gap-2">
@@ -417,7 +417,7 @@ export default function Patients() {
                   </p>
                 </div>
 
-                <div className="flex items-center justify-between pt-4 border-t border-gray-100 text-xs text-gray-500 mb-4">
+                <div className="flex items-center justify-between pt-4 border-t border-gray-100 text-xs text-on-variant mb-4">
                   <div>
                     <p className="font-medium text-gray-700">{patient.total_appointments || 0}</p>
                     <p>Consultations</p>
