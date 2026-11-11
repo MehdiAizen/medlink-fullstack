@@ -1,4 +1,5 @@
 import { Router } from "express";
+import rateLimit from "express-rate-limit";
 import { authenticate, requireRole } from "../../shared/middleware/auth.js";
 import {
   getPractitioners,
@@ -6,7 +7,19 @@ import {
   createAppointment,
   cancelAppointment,
   rescheduleAppointment,
+  getResults,
 } from "./patient.controller.js";
+
+const bookingLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  message: {
+    error:
+      "Trop de tentatives de réservation. Veuillez réessayer dans 15 minutes.",
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 const router = Router();
 
@@ -93,7 +106,7 @@ router.get("/appointments", getAppointments);
  *       409:
  *         description: Créneau déjà réservé
  */
-router.post("/appointments", createAppointment);
+router.post("/appointments", bookingLimiter, createAppointment);
 
 /**
  * @openapi
@@ -158,5 +171,21 @@ router.patch("/appointments/:id/cancel", cancelAppointment);
  *         description: Rendez-vous introuvable
  */
 router.patch("/appointments/:id/reschedule", rescheduleAppointment);
+
+/**
+ * @openapi
+ * /api/patient/records/results:
+ *   get:
+ *     summary: Récupère les résultats d'analyses du patient (avec journalisation)
+ *     tags: [Patient - M2]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Liste des résultats
+ *       401:
+ *         description: Non authentifié
+ */
+router.get("/records/results", getResults);
 
 export default router;

@@ -260,3 +260,14 @@ export async function rescheduleAppointment(
     client.release();
   }
 }
+
+export async function listPatientResults(patientId) {
+  const result = await pool.query(
+    `SELECT id, test_name, result_value, unit, reference_range, status, result_date 
+     FROM lab_results 
+     WHERE patient_id = $1 
+     ORDER BY result_date DESC`,
+    [patientId],
+  );
+  return result.rows;
+}

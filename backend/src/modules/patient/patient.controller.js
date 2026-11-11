@@ -2,9 +2,12 @@ import {
   listPractitioners,
   listPatientAppointments,
   bookAppointment,
+  listPatientResults,
   cancelAppointment as cancelAppointmentService,
   rescheduleAppointment as rescheduleAppointmentService,
 } from "./patient.service.js";
+
+import pool from "../../shared/utils/db.js";
 
 export async function getPractitioners(req, res) {
   try {
@@ -90,5 +93,27 @@ export async function rescheduleAppointment(req, res) {
   } catch (error) {
     const status = error.message.includes("introuvable") ? 404 : 400;
     res.status(status).json({ error: error.message });
+  }
+}
+
+export async function getResults(req, res) {
+  try {
+    const results = await listPatientResults(req.user.id);
+
+    await pool.query(
+      `INSERT INTO journal_audit (utilisateur_id, action, ressource, adresse_ip) 
+       VALUES ($1, $2, $3, $4)`,
+      [
+        req.user.id,
+        "VIEW_RESULTS",
+        "Consultation des résultats médicaux",
+        req.ip,
+      ],
+    );
+
+    res.json(results);
+  } catch (error) {
+    console.error("Erreur lors du chargement des résultats :", error);
+    res.status(500).json({ error: "Impossible de charger les résultats" });
   }
 }

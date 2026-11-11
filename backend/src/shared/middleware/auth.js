@@ -11,12 +11,31 @@ const JWKS = createRemoteJWKSet(
 export async function authenticate(req, res, next) {
   const header = req.headers.authorization;
 
-  if (!header || !header.startsWith('Bearer ')) {
-    return res.status(401).json({ error: 'Token manquant' });
-  }
+    if (!header || !header.startsWith('Bearer ')) {
+        return res.status(401).json({ error: 'Token manquant' });
+    }
 
-  const token = header.split(' ')[1];
+    const token = header.split(' ')[1];
 
+    try {
+        const { alg } = decodeProtectedHeader(token);
+
+        if (alg === 'HS256') {
+            if (process.env.ALLOW_LEGACY_AUTH === 'false' || !process.env.JWT_SECRET) {
+                throw new Error('Authentification historique désactivée');
+            }
+            req.user = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
+            return next();
+        }
+
+        if (!jwks) throw new Error('Keycloak non configuré (KEYCLOAK_URL)');
+        const { payload } = await jwtVerify(token, jwks, { issuer: ISSUER, algorithms: ['RS256'] });
+        req.user = await resolveLocalUser(payload);
+        next();
+    } catch (err) {
+        console.warn('[auth] token refusé :', err.message);
+        return res.status(401).json({ error: 'Token invalide ou expiré' });
+    }
   try {
     const { payload } = await jwtVerify(token, JWKS, {
       issuer: process.env.KEYCLOAK_ISSUER
@@ -50,6 +69,10 @@ export async function authenticate(req, res, next) {
   }
 }
 
+/**
+ * Middleware de contrôle d'accès par rôle (RBAC)
+ * Exemple : requireRole('admin', 'practitioner')
+ */
 export function requireRole(...roles) {
   return (req, res, next) => {
     if (!req.user || !roles.includes(req.user.role)) {

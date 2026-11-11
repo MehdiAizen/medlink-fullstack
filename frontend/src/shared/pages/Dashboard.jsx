@@ -72,68 +72,34 @@ export default function Dashboard() {
   const stats = data.stats || {};
 
   return (
-    <div className="space-y-8 fade-in">
-
-      {/* Statistiques */}
-      <div className="grid gap-6 md:grid-cols-3">
-        {isPatient ? (
-          <>
-            <StatCard
-              label="RDV à venir"
-              value={stats.upcoming_appointments ?? 0}
-              icon="📅"
-              color="bg-primary-50 text-primary"
-            />
-            <StatCard
-              label="Documents médicaux"
-              value={stats.medical_records ?? 0}
-              icon="📋"
-              color="bg-secondary-container text-secondary"
-            />
-            <StatCard
-              label="Résultats d'analyses"
-              value={stats.lab_results ?? 0}
-              icon="🧪"
-              color="bg-surface-container text-on-surface"
-            />
-          </>
-        ) : (
-          <>
-            <StatCard
-              label="RDV aujourd'hui"
-              value={stats.today_appointments ?? 0}
-              icon="📅"
-              color="bg-primary-50 text-primary"
-            />
-            <StatCard
-              label="En attente"
-              value={stats.pending_appointments ?? 0}
-              icon="⏳"
-              color="bg-warning-container text-warning"
-            />
-            <StatCard
-              label="Patients suivis"
-              value={stats.total_patients ?? 0}
-              icon="👥"
-              color="bg-secondary-container text-secondary"
-            />
-          </>
-        )}
-      </div>
-
-      {/* Rendez-vous */}
-      <div className="card">
-        <div className="mb-6 flex items-center justify-between">
-          <h3 className="font-display text-xl font-bold text-on-surface">
-            {isPatient
-              ? 'Prochains rendez-vous'
-              : "Agenda du jour"}
-          </h3>
-
-          <Link to="/appointments" className="btn-ghost text-sm">
-            Voir tout →
-          </Link>
+      <div className="space-y-8 fade-in">
+        {/* Stats */}
+        <div className="grid gap-6 md:grid-cols-3">
+          {isPatient ? (
+              <>
+                <StatCard label="RDV à venir" value={data.stats.upcoming_appointments} icon="📅" color="bg-primary-50 text-primary" />
+                <StatCard label="Documents médicaux" value={data.stats.medical_records} icon="📋" color="bg-secondary-container text-secondary" />
+                <StatCard label="Résultats d'analyses" value={data.stats.lab_results} icon="🧪" color="bg-surface-container text-on-surface" />
+              </>
+          ) : (
+              <>
+                  <StatCard label="RDV aujourd'hui" value={data.stats.today_appointments} icon="📅" color="bg-primary-50 text-primary" />
+                  <StatCard label="En attente" value={data.stats.pending_appointments} icon="⏳" color="bg-warning-container text-warning" />
+                <StatCard label="Patients suivis" value={data.stats.total_patients} icon="👥" color="bg-secondary-container text-secondary" />
+              </>
+          )}
         </div>
+
+        {/* Liste des RDV */}
+        <div className="card">
+          <div className="mb-6 flex items-center justify-between">
+            <h3 className="font-display text-xl font-bold text-on-surface">
+              {isPatient ? 'Prochains rendez-vous' : 'Agenda du jour'}
+            </h3>
+            <Link to="/app/appointments" className="btn-ghost text-sm">
+              Voir tout →
+            </Link>
+          </div>
 
         {appointments.length === 0 ? (
           <div className="py-12 text-center">
@@ -188,38 +154,29 @@ export default function Dashboard() {
         )}
       </div>
 
-      {/* Actions rapides patient */}
-      {isPatient && (
-        <div className="grid gap-6 md:grid-cols-2">
-          <Link to="/book" className="card-hover flex items-center gap-5">
-            <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-primary text-2xl text-white">
-              ➕
+        {/* Actions rapides */}
+        {isPatient && (
+            <div className="grid gap-6 md:grid-cols-2">
+              <Link to="/app/book" className="card-hover flex items-center gap-5">
+                <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-primary text-2xl text-white">
+                  ➕
+                </div>
+                <div>
+                  <p className="font-display text-lg font-bold text-on-surface">Prendre un rendez-vous</p>
+                  <p className="text-sm text-on-variant">Consultez les disponibilités</p>
+                </div>
+              </Link>
+              <Link to="/app/results" className="card-hover flex items-center gap-5">
+                <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-secondary text-2xl text-white">
+                  🧪
+                </div>
+                <div>
+                  <p className="font-display text-lg font-bold text-on-surface">Mes résultats</p>
+                  <p className="text-sm text-on-variant">Analyses et bilans</p>
+                </div>
+              </Link>
             </div>
-            <div>
-              <p className="font-display text-lg font-bold text-on-surface">
-                Prendre un rendez-vous
-              </p>
-              <p className="text-sm text-on-variant">
-                Consultez les disponibilités
-              </p>
-            </div>
-          </Link>
-
-          <Link to="/results" className="card-hover flex items-center gap-5">
-            <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-secondary text-2xl text-white">
-              🧪
-            </div>
-            <div>
-              <p className="font-display text-lg font-bold text-on-surface">
-                Mes résultats
-              </p>
-              <p className="text-sm text-on-variant">
-                Analyses et bilans
-              </p>
-            </div>
-          </Link>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
   );
 }
