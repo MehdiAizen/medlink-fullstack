@@ -3,31 +3,36 @@ import { useAuth } from '../context/AuthContext';
 import Sidebar from './Sidebar';
 import Navbar from './Navbar';
 import Footer from './Footer';
+import SessionTimeout from './SessionTimeout';
 
 export default function Layout() {
-  const { logout } = useAuth();
-  const navigate = useNavigate();
+    const { logout } = useAuth();
+    const navigate = useNavigate();
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
+    const handleLogout = () => {
+        logout();
+        navigate('/login');
+    };
 
-  return (
-      <div className="flex min-h-screen bg-surface">
-        <Sidebar />
+    return (
+        <div className="flex min-h-screen bg-surface">
+            {/* ✅ Active la surveillance du timeout de session ici */}
+            <SessionTimeout />
 
-          <div className="ml-72 flex flex-1 flex-col">
-          <Navbar />
+            {/* Sidebar fixe à gauche (largeur w-72 = 18rem = 288px, donc ml-72 est parfait) */}
+            <Sidebar />
 
-          <main className="flex-1 p-8">
-            <Outlet />
-          </main>
+            {/* Contenu principal à droite de la sidebar */}
+            <div className="ml-72 flex flex-1 flex-col">
+                <Navbar />
 
-          <Footer />
+                <main className="flex-1 p-8 overflow-y-auto">
+                    {/* C'est ici que s'affichent les pages : Dashboard, Appointments, etc. */}
+                    <Outlet />
+                </main>
 
-
+                <Footer />
+            </div>
         </div>
-      </div>
-  );
+    );
 }
