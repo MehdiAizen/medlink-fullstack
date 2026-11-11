@@ -68,7 +68,6 @@ export function AuthProvider({ children }) {
       redirectUri: window.location.origin + '/app',
     });
   };
-
 const logout = async () => {
     if (logoutInProgress.current) return;
 
