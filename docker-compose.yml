@@ -36,8 +36,8 @@ services:
       - KEYCLOAK_URL=http://keycloak:8080
       - KEYCLOAK_PUBLIC_URL=http://localhost:8080
       - KEYCLOAK_REALM=medlink
-      - KEYCLOAK_ADMIN_CLIENT_ID=admin
-      - KEYCLOAK_ADMIN_CLIENT_SECRET=admin
+      - KEYCLOAK_ADMIN_CLIENT_ID=medlink-admin-api
+      - KEYCLOAK_ADMIN_CLIENT_SECRET=dev-admin-secret-change-me
     depends_on:
       db:
         condition: service_healthy
@@ -51,7 +51,7 @@ services:
     depends_on:
       - backend
 
-
+  # 4. Keycloak
   keycloak:
     image: quay.io/keycloak/keycloak:26.4
     container_name: medlink-keycloak
