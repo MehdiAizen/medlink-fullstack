@@ -1,50 +1,56 @@
+
 import { createRemoteJWKSet, jwtVerify } from 'jose';
 import dotenv from 'dotenv';
 import pool from '../utils/db.js';
 
 dotenv.config();
 
-const JWKS = createRemoteJWKSet(
-  new URL(process.env.KEYCLOAK_JWKS_URL)
-);
+// Configuration de Keycloak
+const JWKS_URL = process.env.KEYCLOAK_JWKS_URL;
+const KEYCLOAK_ISSUER = process.env.KEYCLOAK_ISSUER;
+const KEYCLOAK_CLIENT_ID = process.env.KEYCLOAK_CLIENT_ID || 'medlink-app';
 
+if (!JWKS_URL || !KEYCLOAK_ISSUER) {
+  throw new Error(
+    'Configuration Keycloak manquante : vérifie KEYCLOAK_JWKS_URL et KEYCLOAK_ISSUER'
+  );
+}
+
+const JWKS = createRemoteJWKSet(new URL(JWKS_URL));
+
+// Middleware d'authentification Keycloak
 export async function authenticate(req, res, next) {
   const header = req.headers.authorization;
 
-    if (!header || !header.startsWith('Bearer ')) {
-        return res.status(401).json({ error: 'Token manquant' });
-    }
+  if (!header || !header.startsWith('Bearer ')) {
+    return res.status(401).json({
+      error: 'Token manquant'
+    });
+  }
 
-    const token = header.split(' ')[1];
+  const token = header.substring(7).trim();
 
-    try {
-        const { alg } = decodeProtectedHeader(token);
-
-        if (alg === 'HS256') {
-            if (process.env.ALLOW_LEGACY_AUTH === 'false' || !process.env.JWT_SECRET) {
-                throw new Error('Authentification historique désactivée');
-            }
-            req.user = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
-            return next();
-        }
-
-        if (!jwks) throw new Error('Keycloak non configuré (KEYCLOAK_URL)');
-        const { payload } = await jwtVerify(token, jwks, { issuer: ISSUER, algorithms: ['RS256'] });
-        req.user = await resolveLocalUser(payload);
-        next();
-    } catch (err) {
-        console.warn('[auth] token refusé :', err.message);
-        return res.status(401).json({ error: 'Token invalide ou expiré' });
-    }
   try {
+    // Vérifier la signature et la validité du JWT
     const { payload } = await jwtVerify(token, JWKS, {
-      issuer: process.env.KEYCLOAK_ISSUER
+      issuer: KEYCLOAK_ISSUER,
+      algorithms: ['RS256']
     });
 
-    if (payload.azp !== 'medlink-app') {
-      return res.status(401).json({ error: 'Client non autorisé' });
+    // Vérifier que le token provient du client MedLink
+    if (payload.azp !== KEYCLOAK_CLIENT_ID) {
+      return res.status(401).json({
+        error: 'Client non autorisé'
+      });
     }
 
+    if (!payload.sub) {
+      return res.status(401).json({
+        error: 'Identifiant Keycloak manquant'
+      });
+    }
+
+    // Récupérer le profil utilisateur dans PostgreSQL
     const result = await pool.query(
       `SELECT id, email, full_name, role, specialty
        FROM users
@@ -58,21 +64,22 @@ export async function authenticate(req, res, next) {
       });
     }
 
+    // Attacher l'utilisateur à la requête
     req.user = result.rows[0];
-    next();
+
+    return next();
 
   } catch (err) {
-    console.error('Erreur authentification :', err.message);
+    console.error('[auth] Erreur authentification :', err.message);
+
     return res.status(401).json({
       error: 'Token invalide ou expiré'
     });
   }
 }
 
-/**
- * Middleware de contrôle d'accès par rôle (RBAC)
- * Exemple : requireRole('admin', 'practitioner')
- */
+// Middleware de contrôle d'accès par rôle (RBAC)
+// Exemple : requireRole('admin', 'practitioner')
 export function requireRole(...roles) {
   return (req, res, next) => {
     if (!req.user || !roles.includes(req.user.role)) {
@@ -81,6 +88,6 @@ export function requireRole(...roles) {
       });
     }
 
-    next();
+    return next();
   };
 }

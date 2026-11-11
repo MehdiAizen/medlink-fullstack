@@ -49,6 +49,7 @@ services:
     environment:
       KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN}
       KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+      KC_HOSTNAME: "http://localhost:8081"
       # Injecté dans keycloak/import/realm-medlink.json (le secret n'est pas écrit dans git)
       KEYCLOAK_BACKEND_CLIENT_SECRET: ${KEYCLOAK_BACKEND_CLIENT_SECRET}
       # SMTP du realm (par défaut Mailpit ; Gmail possible via votre .env)

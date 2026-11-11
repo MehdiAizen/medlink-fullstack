@@ -3,6 +3,7 @@ import {
   useContext,
   useState,
   useEffect,
+  useRef,
 } from 'react';
 
 import { api } from '../api/axiosConfig';
@@ -29,6 +30,7 @@ function initKeycloakOnce() {
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const logoutInProgress = useRef(false);
 
   useEffect(() => {
     let mounted = true;
@@ -66,13 +68,21 @@ export function AuthProvider({ children }) {
     });
   };
 
-  const logout = () => {
+const logout = async () => {
+    if (logoutInProgress.current) return;
+
+    logoutInProgress.current = true;
     setUser(null);
 
-    keycloak.logout({
-      redirectUri: window.location.origin,
-    });
-  };
+    try {
+        await keycloak.logout({
+            redirectUri: window.location.origin + '/login',
+        });
+    } catch (error) {
+        logoutInProgress.current = false;
+        throw error;
+    }
+};
 
   return (
     <AuthContext.Provider
