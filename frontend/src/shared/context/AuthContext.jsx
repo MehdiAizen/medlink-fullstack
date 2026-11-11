@@ -5,6 +5,7 @@ import {
   useEffect,
   useRef,
 } from 'react';
+import { useIdleLogout } from '../hooks/useIdleLogout.js';
 
 import { api } from '../api/axiosConfig';
 import keycloak from '../keycloak.js';
@@ -73,7 +74,9 @@ const logout = async () => {
 
     logoutInProgress.current = true;
     setUser(null);
-
+useIdleLogout(!!user, () => {
+  logout().catch(() => {});
+});
     try {
         await keycloak.logout({
             redirectUri: window.location.origin + '/login',
