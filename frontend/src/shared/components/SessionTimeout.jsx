@@ -17,7 +17,7 @@ export default function SessionTimeout() {
         // 2. Démarrer un nouveau minuteur de 15 minutes (15 * 60 * 1000 ms = 900 000 ms)
         timerRef.current = setTimeout(() => {
             // Action à la fin des 15 minutes d'inactivité
-            logout(); // Nettoie le token et l'état utilisateur
+            logout();
             navigate('/login', { replace: true }); // Redirige vers la page de connexion
 
             // Alerte utilisateur (optionnel mais recommandé pour l'UX)

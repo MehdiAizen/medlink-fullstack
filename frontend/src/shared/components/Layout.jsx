@@ -4,47 +4,35 @@ import Sidebar from './Sidebar';
 import Navbar from './Navbar';
 import Footer from './Footer';
 import SessionTimeout from './SessionTimeout';
+
 export default function Layout() {
-  const { logout } = useAuth();
-  const navigate = useNavigate();
+    const { logout } = useAuth();
+    const navigate = useNavigate();
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
-    export default function Layout() {
-        return (
-            <div className="flex min-h-screen bg-surface">
-                {/* ✅ Active la surveillance du timeout ici */}
-                <SessionTimeout />
+    const handleLogout = () => {
+        logout();
+        navigate('/login');
+    };
 
-                <Sidebar />
+    return (
+        <div className="flex min-h-screen bg-surface">
+            {/* ✅ Active la surveillance du timeout de session ici */}
+            <SessionTimeout />
 
-                <main className="flex-1 flex flex-col min-w-0">
-                    <Navbar />
-                    <div className="flex-1 p-8 overflow-y-auto">
-                        <Outlet /> {/* C'est ici que s'affichent Dashboard, Appointments, etc. */}
-                    </div>
+            {/* Sidebar fixe à gauche (largeur w-72 = 18rem = 288px, donc ml-72 est parfait) */}
+            <Sidebar />
+
+            {/* Contenu principal à droite de la sidebar */}
+            <div className="ml-72 flex flex-1 flex-col">
+                <Navbar />
+
+                <main className="flex-1 p-8 overflow-y-auto">
+                    {/* C'est ici que s'affichent les pages : Dashboard, Appointments, etc. */}
+                    <Outlet />
                 </main>
+
+                <Footer />
             </div>
-        );
-    }
-  return (
-      <div className="flex min-h-screen bg-surface">
-
-        <Sidebar />
-
-          <div className="ml-72 flex flex-1 flex-col">
-          <Navbar />
-
-          <main className="flex-1 p-8">
-            <Outlet />
-          </main>
-
-          <Footer />
-
-
         </div>
-      </div>
-  );
+    );
 }
