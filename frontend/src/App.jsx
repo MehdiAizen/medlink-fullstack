@@ -2,20 +2,20 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './shared/context/AuthContext';
 import Layout from './shared/components/Layout';
 
-// 1. Import de la Landing Page et du Login
+// Pages publiques
 import Landing from './shared/pages/Landing';
 import Login from './modules/auth/pages/Login';
 import Signup from './modules/auth/pages/Signup';
 import SignupPractitioner from './modules/auth/pages/SignupPractitioner';
 
-// 2. Import des pages de l'application (Dashboard, etc.)
+// Pages de l'application
 import Dashboard from './shared/pages/Dashboard';
 import Appointments from './modules/patient/pages/Appointments';
 import BookAppointment from './modules/patient/pages/BookAppointment';
 import Records from './modules/patient/pages/Records';
 import Results from './modules/patient/pages/Results';
 
-// 3. Import des pages PRATICIEN (US-18 à US-26)
+// Pages praticien (US-18 à US-26)
 import Disponibilites from './modules/practitioner/pages/Disponibilites';
 import Agenda from './modules/practitioner/pages/Agenda';
 import Patients from './modules/practitioner/pages/Patients';
@@ -23,7 +23,12 @@ import DossiersMedicaux from './modules/practitioner/pages/DossiersMedicaux';
 import ComptesRendus from './modules/practitioner/pages/ComptesRendus';
 import PublierResultats from './modules/practitioner/pages/PublierResultats';
 
-// Composant de protection des routes
+// Pages admin
+import AdminUsers from './modules/admin/pages/AdminUsers';
+import AdminCliniques from './modules/admin/pages/AdminClinique';
+import AdminAudit from './modules/admin/pages/AdminAudit';
+
+// Protection : utilisateur connecté
 function PrivateRoute({ children }) {
     const { user, loading } = useAuth();
     if (loading) {
@@ -37,37 +42,49 @@ function PrivateRoute({ children }) {
     return children;
 }
 
+// Protection : rôle requis (le backend contrôle aussi, ceci évite les pages vides)
+function RoleRoute({ roles, children }) {
+    const { user } = useAuth();
+    if (!roles.includes(user?.role)) return <Navigate to="/app" replace />;
+    return children;
+}
+
 export default function App() {
     return (
         <Routes>
-            {/* Route publique : Page d'accueil */}
+            {/* Routes publiques */}
             <Route path="/" element={<Landing />} />
-
-            {/* Route publique : Page de connexion */}
             <Route path="/login" element={<Login />} />
-
-            {/* ✅ Route publique : Inscription patient */}
             <Route path="/signup" element={<Signup />} />
-
-            {/* ✅ Route publique : Demande de compte praticien */}
             <Route path="/signup-practitioner" element={<SignupPractitioner />} />
 
-            {/* Routes protégées : Application (accessible uniquement si connecté) */}
+            {/* Routes protégées */}
             <Route path="/app" element={<PrivateRoute><Layout /></PrivateRoute>}>
                 <Route index element={<Dashboard />} />
+
+                {/* Patient et praticien */}
                 <Route path="appointments" element={<Appointments />} />
-                <Route path="book" element={<BookAppointment />} />
                 <Route path="records" element={<Records />} />
-                <Route path="results" element={<Results />} />
-                <Route path="disponibilites" element={<Disponibilites />} />  
-                <Route path="agenda" element={<Agenda />} />                    
-                <Route path="patients" element={<Patients />} />                
-                <Route path="dossiers/:id" element={<DossiersMedicaux />} />        
-                <Route path="comptes-rendus" element={<ComptesRendus />} />      
-                <Route path="publier-resultats" element={<PublierResultats />} /> 
+
+                {/* Patient */}
+                <Route path="book" element={<RoleRoute roles={['patient']}><BookAppointment /></RoleRoute>} />
+                <Route path="results" element={<RoleRoute roles={['patient']}><Results /></RoleRoute>} />
+
+                {/* Praticien */}
+                <Route path="disponibilites" element={<RoleRoute roles={['practitioner']}><Disponibilites /></RoleRoute>} />
+                <Route path="agenda" element={<RoleRoute roles={['practitioner']}><Agenda /></RoleRoute>} />
+                <Route path="patients" element={<RoleRoute roles={['practitioner']}><Patients /></RoleRoute>} />
+                <Route path="dossiers/:id" element={<RoleRoute roles={['practitioner']}><DossiersMedicaux /></RoleRoute>} />
+                <Route path="comptes-rendus" element={<RoleRoute roles={['practitioner']}><ComptesRendus /></RoleRoute>} />
+                <Route path="publier-resultats" element={<RoleRoute roles={['practitioner']}><PublierResultats /></RoleRoute>} />
+
+                {/* Admin */}
+                <Route path="admin/users" element={<RoleRoute roles={['admin']}><AdminUsers /></RoleRoute>} />
+                <Route path="admin/cliniques" element={<RoleRoute roles={['admin']}><AdminCliniques /></RoleRoute>} />
+                <Route path="admin/audit" element={<RoleRoute roles={['admin']}><AdminAudit /></RoleRoute>} />
             </Route>
 
-            {/* Redirection des pages inexistantes vers l'accueil */}
+            {/* Pages inexistantes */}
             <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
     );
