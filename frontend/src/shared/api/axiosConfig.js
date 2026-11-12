@@ -14,55 +14,44 @@ async function request(path, options = {}) {
     headers.Authorization = `Bearer ${keycloak.token}`;
   }
 
-  const res = await fetch(`${API_BASE}${path}`, {
-    ...options,
-    headers,
-  });
-
+  const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
   const data = await res.json().catch(() => ({}));
 
   if (!res.ok) {
     throw new Error(data.error || `Erreur ${res.status}`);
   }
-
   return data;
 }
 
-<<<<<<< HEAD
+// Routes publiques : pas de token. On garde les erreurs par champ (err.fields).
+async function publicPost(path, payload) {
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const err = new Error(data.error || `Erreur ${res.status}`);
+    err.status = res.status;
+    err.fields = data.fields || {};
+    throw err;
+  }
+  return data;
+}
+
 const qs = (params = {}) => {
-    const q = new URLSearchParams(Object.entries(params).filter(([, v]) => v !== '' && v != null)).toString();
-    return q ? `?${q}` : '';
+  const q = new URLSearchParams(
+    Object.entries(params).filter(([, v]) => v !== '' && v != null)
+  ).toString();
+  return q ? `?${q}` : '';
 };
 const withBody = (method, body) => ({ method, body: JSON.stringify(body) });
 
-export const api = {
-  // --- Module AUTH ---
-auth: {
-  me: () => request("/auth/me"),
-  // Routes publiques de la demande de compte praticien.
-  practitionerOptions: () => request("/auth/practitioner-options"),
-  requestPractitioner: async (payload) => {
-    const res = await fetch(`${API_BASE}/auth/practitioner-requests`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      const err = new Error(data.error || `Erreur ${res.status}`);
-      err.status = res.status;
-      err.fields = data.fields || {};
-      throw err;
-    }
-    return data;
-=======
+// Rôle lu dans le token Keycloak (realm_access.roles), pas dans un claim "role"
 function currentRole() {
-  try {
-    const payload = getToken().split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
-    return JSON.parse(atob(payload)).role;
-  } catch {
-    return null;
-  }
+  const roles = keycloak.tokenParsed?.realm_access?.roles || [];
+  return ['admin', 'practitioner', 'patient'].find((r) => roles.includes(r)) || null;
 }
 
 const byRole = (map) => (...args) => {
@@ -73,18 +62,24 @@ const byRole = (map) => (...args) => {
 
 // --- Module AUTH ---
 const auth = {
-  login: (email, password) =>
-      request('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
   me: () => request('/auth/me'),
+  register: (payload) => publicPost('/auth/register', payload),
+  practitionerOptions: () => request('/auth/practitioner-options'),
+  requestPractitioner: (payload) => publicPost('/auth/practitioner-requests', payload),
 };
 
 // --- Module PATIENT ---
 const patient = {
+  practitioners: () => request('/patient/practitioners'),
   doctors: () => request('/patient/doctors'),
   appointments: {
     list: () => request('/patient/appointments'),
-    create: (data) => request('/patient/appointments', { method: 'POST', body: JSON.stringify(data) }),
+    create: (data) => request('/patient/appointments', withBody('POST', data)),
+    cancel: (id) => request(`/patient/appointments/${id}/cancel`, { method: 'PATCH' }),
+    reschedule: (id, data) =>
+      request(`/patient/appointments/${id}/reschedule`, withBody('PATCH', data)),
   },
+  cancel: (id) => request(`/patient/appointments/${id}/cancel`, { method: 'PATCH' }),
   records: {
     list: () => request('/patient/records'),
     results: () => request('/patient/records/results'),
@@ -97,20 +92,12 @@ const practitioner = {
   appointments: {
     list: () => request('/practitioner/appointments'),
     updateStatus: (id, status) =>
-      request(`/practitioner/appointments/${id}`, {
-        method: 'PATCH',
-        body: JSON.stringify({ status }),
-      }),
+      request(`/practitioner/appointments/${id}`, withBody('PATCH', { status })),
   },
   disponibilites: {
     list: () => request('/practitioner/disponibilites'),
-    create: (data) =>
-      request('/practitioner/disponibilites', {
-        method: 'POST',
-        body: JSON.stringify(data),
-      }),
-    remove: (id) =>
-      request(`/practitioner/disponibilites/${id}`, { method: 'DELETE' }),
+    create: (data) => request('/practitioner/disponibilites', withBody('POST', data)),
+    remove: (id) => request(`/practitioner/disponibilites/${id}`, { method: 'DELETE' }),
   },
   patients: {
     search: (q = '') =>
@@ -118,39 +105,54 @@ const practitioner = {
     records: (id) => request(`/practitioner/patients/${id}/records`),
     results: (id) => request(`/practitioner/patients/${id}/results`),
     addRecord: (id, data) =>
-      request(`/practitioner/patients/${id}/records`, {
-        method: 'POST',
-        body: JSON.stringify(data),
-      }),
+      request(`/practitioner/patients/${id}/records`, withBody('POST', data)),
     addResult: (id, data) =>
-      request(`/practitioner/patients/${id}/results`, {
-        method: 'POST',
-        body: JSON.stringify(data),
-      }),
+      request(`/practitioner/patients/${id}/results`, withBody('POST', data)),
   },
   records: {
-    // ✅ CORRIGÉ : Appelle maintenant la bonne route pour lister les comptes-rendus
     list: () => request('/practitioner/records'),
-    create: (data) =>
-      request('/practitioner/records', {
-        method: 'POST',
-        body: JSON.stringify(data),
-      }),
+    create: (data) => request('/practitioner/records', withBody('POST', data)),
   },
   results: {
-    create: (data) =>
-      request('/practitioner/results', {
-        method: 'POST',
-        body: JSON.stringify(data),
-      }),
+    create: (data) => request('/practitioner/results', withBody('POST', data)),
   },
+};
+
+// --- Module ADMIN ---
+const admin = {
+  stats: () => request('/admin/stats'),
+  users: {
+    list: (params) => request(`/admin/users${qs(params)}`),
+    create: (data) => request('/admin/users', withBody('POST', data)),
+    update: (id, data) => request(`/admin/users/${id}`, withBody('PATCH', data)),
+    setStatus: (id, enabled) =>
+      request(`/admin/users/${id}/status`, withBody('PATCH', { enabled })),
+    resetPassword: (id, password) =>
+      request(`/admin/users/${id}/reset-password`, withBody('POST', { password })),
+    remove: (id, confirm_email) =>
+      request(`/admin/users/${id}`, withBody('DELETE', { confirm_email })),
+    sync: () => request('/admin/users/sync', { method: 'POST' }),
+  },
+  cliniques: {
+    list: () => request('/admin/cliniques'),
+    create: (data) => request('/admin/cliniques', withBody('POST', data)),
+    update: (id, data) => request(`/admin/cliniques/${id}`, withBody('PUT', data)),
+    remove: (id) => request(`/admin/cliniques/${id}`, { method: 'DELETE' }),
+    setPractitioners: (id, practitioner_ids) =>
+      request(`/admin/cliniques/${id}/practitioners`, withBody('PUT', { practitioner_ids })),
+  },
+  audit: (params) => request(`/admin/audit${qs(params)}`),
 };
 
 export const api = {
   auth,
+  // raccourcis historiques
+  register: auth.register,
   patient,
   practitioner,
+  admin,
 
+  // façades selon le rôle (utilisées par les pages d'Aya)
   appointments: {
     list: byRole({ patient: patient.appointments.list, practitioner: practitioner.appointments.list }),
     create: byRole({ patient: patient.appointments.create }),
@@ -161,109 +163,7 @@ export const api = {
     list: byRole({ patient: patient.records.list, practitioner: practitioner.records.list }),
     results: byRole({ patient: patient.records.results }),
     create: byRole({ practitioner: practitioner.records.create }),
->>>>>>> 9a5ca9baf5b73266df14e2524266ee449c608f65
-  },
-  // Route publique : pas de token. On garde les erreurs par champ (err.fields).
-  register: async (payload) => {
-    const res = await fetch(`${API_BASE}/auth/register`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      const err = new Error(data.error || `Erreur ${res.status}`);
-      err.status = res.status;
-      err.fields = data.fields || {};
-      throw err;
-    }
-    return data;
-  },
-},
-
-<<<<<<< HEAD
-  // --- Module PATIENT ---
-  patient: {
-    practitioners: () => request("/patient/practitioners"),
-
-    appointments: {
-      list: () => request("/patient/appointments"),
-      create: (data) =>
-        request("/patient/appointments", {
-          method: "POST",
-          body: JSON.stringify(data),
-        }),
-
-      cancel: (id) =>
-        request(`/patient/appointments/${id}/cancel`, {
-          method: "PATCH",
-        }),
-
-      reschedule: (id, data) =>
-        request(`/patient/appointments/${id}/reschedule`, {
-          method: "PATCH",
-          body: JSON.stringify(data),
-        }),
-    },
-
-    cancel: (id) =>
-      request(`/patient/appointments/${id}/cancel`, {
-        method: "PATCH",
-      }),
-
-    records: {
-      list: () => request("/patient/records"),
-      results: () => request("/patient/records/results"),
-    },
   },
 
-  // --- Module PRACTITIONER ---
-  practitioner: {
-    appointments: {
-      list: () => request("/practitioner/appointments"),
-      updateStatus: (id, status) =>
-        request(`/practitioner/appointments/${id}`, {
-          method: "PATCH",
-          body: JSON.stringify({ status }),
-        }),
-    },
-
-      // --- Module admin
-      admin: {
-          stats: () => request('/admin/stats'),
-          users: {
-              list: (params) => request(`/admin/users${qs(params)}`),
-              create: (data) => request('/admin/users', withBody('POST', data)),
-              update: (id, data) => request(`/admin/users/${id}`, withBody('PATCH', data)),
-              setStatus: (id, enabled) => request(`/admin/users/${id}/status`, withBody('PATCH', { enabled })),
-              resetPassword: (id, password) => request(`/admin/users/${id}/reset-password`, withBody('POST', { password })),
-              remove: (id, confirm_email) => request(`/admin/users/${id}`, withBody('DELETE', { confirm_email })),
-              sync: () => request('/admin/users/sync', { method: 'POST' }),
-          },
-          cliniques: {
-              list: () => request('/admin/cliniques'),
-              create: (data) => request('/admin/cliniques', withBody('POST', data)),
-              update: (id, data) => request(`/admin/cliniques/${id}`, withBody('PUT', data)),
-              remove: (id) => request(`/admin/cliniques/${id}`, { method: 'DELETE' }),
-              setPractitioners: (id, practitioner_ids) =>
-                  request(`/admin/cliniques/${id}/practitioners`, withBody('PUT', { practitioner_ids })),
-          },
-          audit: (params) => request(`/admin/audit${qs(params)}`),
-      },
-    records: {
-      list: () => request("/practitioner/records"),
-      create: (data) =>
-        request("/practitioner/records", {
-          method: "POST",
-          body: JSON.stringify(data),
-        }),
-    },
-  },
-
-  // --- Fallback Dashboard ---
-  dashboard: () => request("/dashboard"),
-};
-=======
   dashboard: () => request('/dashboard'),
 };
->>>>>>> 9a5ca9baf5b73266df14e2524266ee449c608f65

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, Navigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../shared/context/AuthContext';
 import { api } from '../../shared/api/axiosConfig';
 
@@ -73,9 +73,13 @@ export default function Dashboard() {
     fetchDashboard();
   }, [user, isAdmin, isPatient]);
 
-  // Les admins vont directement sur leur back-office
+  // Le tableau de bord administrateur est géré par le module admin
   if (isAdmin) {
-    return <Navigate to="/app/admin/users" replace />;
+    return (
+      <div className="p-6 text-on-variant">
+        Le tableau de bord administrateur est géré par le module admin.
+      </div>
+    );
   }
 
   if (loading) {
