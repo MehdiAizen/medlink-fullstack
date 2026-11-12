@@ -1,10 +1,22 @@
 import bcrypt from 'bcryptjs';
 import pool from './shared/utils/db.js';
+import { encrypt } from './shared/utils/encryption.js';
 
 async function seed() {
   console.log('🌱 Début du seeding de la base MedLink...');
 
   try {
+    await pool.query(`
+  DROP TABLE IF EXISTS notifications CASCADE;
+  DROP TABLE IF EXISTS journal_audit CASCADE;
+  DROP TABLE IF EXISTS lab_results CASCADE;
+  DROP TABLE IF EXISTS medical_records CASCADE;
+  DROP TABLE IF EXISTS appointments CASCADE;
+  DROP TABLE IF EXISTS practitioner_clinique CASCADE;
+  DROP TABLE IF EXISTS cliniques CASCADE;
+  DROP TABLE IF EXISTS users CASCADE;
+`);
+
     // 1. Création des tables
     await pool.query(`
       CREATE TABLE IF NOT EXISTS users (
@@ -14,7 +26,7 @@ async function seed() {
         full_name VARCHAR(255) NOT NULL,
         role VARCHAR(20) NOT NULL CHECK (role IN ('patient', 'practitioner', 'admin')),
         specialty VARCHAR(100),
-        phone VARCHAR(30),
+        phone TEXT,
         created_at TIMESTAMPTZ DEFAULT NOW()
       );
 
@@ -116,6 +128,12 @@ async function seed() {
       ADD COLUMN IF NOT EXISTS practitioner_id INTEGER REFERENCES users(id) ON DELETE SET NULL
     `);
 
+      await pool.query(`
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS keycloak_id UUID UNIQUE;
+      ALTER TABLE users ALTER COLUMN password_hash DROP NOT NULL;
+    `);
+
+
     const hash = await bcrypt.hash('password123', 10);
 
     // 2. Nettoyage des anciennes données
@@ -157,6 +175,21 @@ async function seed() {
          ('pediatre@medlink.tn', $1, 'Leila Gharbi', 'practitioner', 'Pédiatrie', '+216 71 345 678')
        RETURNING id, email, role`,
       [hash]
+        `INSERT INTO users (email, password_hash, full_name, role, specialty, phone) VALUES
+                                                                                       ('admin@medlink.tn', $1, 'Admin Principal', 'admin', NULL, $2),
+                                                                                       ('patient@medlink.tn', $1, 'Amine Ben Salah', 'patient', NULL, $3),
+                                                                                       ('sara.patient@medlink.tn', $1, 'Sara Trabelsi', 'patient', NULL, $4),
+                                                                                       ('doctor@medlink.tn', $1, 'Dr. Karim Mansouri', 'practitioner', 'Cardiologie', $5),
+                                                                                       ('pediatre@medlink.tn', $1, 'Dr. Leila Gharbi', 'practitioner', 'Pédiatrie', $6)
+          RETURNING id, email, role`,
+        [
+          hash,
+          encrypt('+216 71 000 000'), // ✅ Chiffrement de l'admin
+          encrypt('+216 98 123 456'), // ✅ Chiffrement du patient 1
+          encrypt('+216 22 456 789'), // ✅ Chiffrement du patient 2
+          encrypt('+216 71 234 567'), // ✅ Chiffrement du médecin 1
+          encrypt('+216 71 345 678')  // ✅ Chiffrement du médecin 2
+        ]
     );
 
     const admin = users.rows[0].id;
