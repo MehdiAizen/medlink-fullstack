@@ -1,4 +1,16 @@
-import { loginUser, getUserById } from './auth.service.js';
+import {
+    loginUser,
+    getUserById,
+    registerPatient,
+    getPractitionerOptions,
+    createPractitionerRequest,
+    RegistrationError,
+} from './auth.service.js';
+import {
+    validateRegistration,
+    validatePractitionerRequest,
+    PASSWORD_RULES_MESSAGE,
+} from '../../shared/utils/validators.js';
 
 export async function login(req, res) {
     try {
@@ -23,5 +35,84 @@ export async function getMe(req, res) {
         res.json(user);
     } catch (err) {
         res.status(404).json({ error: err.message });
+    }
+}
+
+export async function register(req, res) {
+    const { valid, errors, values } = validateRegistration(req.body);
+
+    if (!valid) {
+        return res.status(400).json({ error: 'Données invalides', fields: errors });
+    }
+
+    try {
+        await registerPatient(values, req.ip);
+
+        return res.status(201).json({
+            message:
+                'Compte créé. Vérifiez votre boîte mail pour confirmer votre adresse email avant de vous connecter.',
+        });
+    } catch (err) {
+        if (err instanceof RegistrationError) {
+            if (err.code === 'CONFLICT') {
+                // Message volontairement neutre : il ne confirme pas qu'un compte existe.
+                return res.status(409).json({
+                    error:
+                        "Impossible de créer le compte avec ces informations. Si vous avez déjà un compte, connectez-vous ou réinitialisez votre mot de passe.",
+                });
+            }
+
+            if (err.code === 'REJECTED') {
+                return res.status(400).json({
+                    error: 'Données invalides',
+                    fields: { password: PASSWORD_RULES_MESSAGE },
+                });
+            }
+        }
+
+        console.error('Erreur inscription :', err.message);
+        return res.status(500).json({
+            error: 'Inscription impossible pour le moment. Veuillez réessayer.',
+        });
+    }
+}
+
+// Listes du formulaire de demande praticien (spécialités et cliniques).
+export async function practitionerOptions(req, res) {
+    try {
+        return res.json(await getPractitionerOptions());
+    } catch (err) {
+        console.error('Options praticien :', err.message);
+        return res.status(500).json({ error: 'Impossible de charger les listes pour le moment.' });
+    }
+}
+
+// Demande de compte praticien : enregistrée en attente de validation par un administrateur.
+export async function requestPractitioner(req, res) {
+    const { valid, errors, values } = validatePractitionerRequest(req.body);
+
+    if (!valid) {
+        return res.status(400).json({ error: 'Données invalides', fields: errors });
+    }
+
+    try {
+        await createPractitionerRequest(values, req.ip);
+
+        // Même réponse que l'adresse soit connue ou non : on ne révèle pas si un compte existe.
+        return res.status(201).json({
+            message:
+                'Demande envoyée. Elle sera examinée avant l\'activation de votre compte.',
+        });
+    } catch (err) {
+        if (err instanceof RegistrationError && err.code === 'BAD_CLINIQUE') {
+            return res.status(400).json({
+                error: 'Données invalides',
+                fields: { cliniqueId: 'Veuillez choisir une clinique' },
+            });
+        }
+        console.error('Demande praticien :', err.message);
+        return res.status(500).json({
+            error: 'Demande impossible pour le moment. Veuillez réessayer.',
+        });
     }
 }
