@@ -5,10 +5,10 @@ import {
   useEffect,
   useRef,
 } from 'react';
-import { useIdleLogout } from '../hooks/useIdleLogout.js';
 
 import { api } from '../api/axiosConfig';
 import keycloak from '../keycloak.js';
+import { useIdleLogout } from '../hooks/useIdleLogout.js';
 
 const AuthContext = createContext(null);
 
@@ -68,23 +68,28 @@ export function AuthProvider({ children }) {
       redirectUri: window.location.origin + '/app',
     });
   };
-const logout = async () => {
+
+  const logout = async () => {
     if (logoutInProgress.current) return;
 
     logoutInProgress.current = true;
     setUser(null);
-useIdleLogout(!!user, () => {
-  logout().catch(() => {});
-});
+
     try {
-        await keycloak.logout({
-            redirectUri: window.location.origin + '/login',
-        });
+      await keycloak.logout({
+        redirectUri: window.location.origin + '/login',
+      });
     } catch (error) {
-        logoutInProgress.current = false;
-        throw error;
+      logoutInProgress.current = false;
+      throw error;
     }
-};
+  };
+
+  // US-40 : déconnexion après 15 min d'inactivité.
+  // Le hook est appelé ici, au premier niveau du composant, et jamais dans logout().
+  useIdleLogout(!!user, () => {
+    logout().catch(() => {});
+  });
 
   return (
     <AuthContext.Provider
