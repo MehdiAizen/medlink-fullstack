@@ -24,7 +24,7 @@ const logout = async () => {
       <div className="flex min-h-screen bg-surface">
         <Sidebar />
 
-          <div className="ml-72 flex flex-1 flex-col">
+        <div className="ml-72 flex flex-1 flex-col">
           <Navbar />
 
           <main className="flex-1 p-8">

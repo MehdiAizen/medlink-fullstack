@@ -1,4 +1,3 @@
-
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import logo from '../assets/logo-medlink.jpg';
@@ -15,8 +14,12 @@ const patientNav = [
 // Navigation Praticien
 const practitionerNav = [
     { to: '/app', label: 'Tableau de bord', icon: '📊' },
-    { to: '/app/appointments', label: 'Agenda', icon: '📅' },
-    { to: '/app/records', label: 'Dossiers patients', icon: '📋' },
+    { to: '/app/appointments', label: 'Agenda multi-sites', icon: '📅' },
+    { to: '/app/disponibilites', label: 'Mes disponibilités', icon: '⏰' },
+    { to: '/app/patients', label: 'Mes patients', icon: '🔍' },
+    { to: '/app/records', label: 'Dossiers médicaux', icon: '📁' },
+    { to: '/app/comptes-rendus', label: 'Comptes-rendus', icon: '📝' },
+    { to: '/app/publier-resultats', label: 'Publier résultats', icon: '💉' },
 ];
 
 // Navigation Administrateur
@@ -78,7 +81,7 @@ export default function Sidebar() {
             </div>
 
             {/* Navigation */}
-            <nav className="flex-1 space-y-1 px-4 py-6">
+            <nav className="flex-1 space-y-1 overflow-y-auto px-4 py-6">
                 <p className="mb-3 px-4 text-xs font-semibold uppercase tracking-wider text-on-variant">
                     Menu principal
                 </p>
