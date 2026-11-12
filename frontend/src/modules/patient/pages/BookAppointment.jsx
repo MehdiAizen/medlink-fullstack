@@ -34,7 +34,7 @@ export default function BookAppointment() {
         doctor_id: parseInt(form.doctor_id, 10),
       });
       setSuccess(true);
-      setTimeout(() => navigate('/appointments'), 1500);
+      setTimeout(() => navigate('/app/appointments'), 1500);
     } catch (err) {
       setError(err.message);
     } finally {
