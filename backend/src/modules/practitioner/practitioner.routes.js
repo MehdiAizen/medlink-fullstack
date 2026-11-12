@@ -19,15 +19,16 @@ router.get('/appointments', authenticate, requireRole('practitioner', 'admin'), 
         user: req.user.email
     });
 });
-router.get('/records/:id', authenticate, requireRole('practitioner'), logAction('VIEW_RECORD', (req) => `Dossier Patient ID: ${req.params.id}`), async (req, res) => {
-    try {
-        // Simulation de récupération du dossier
-        const record = { id: req.params.id, diagnosis: 'HTA Grade 1', notes: 'Patient stable' };
-        res.json(record);
-    } catch (err) {
-        res.status(500).json({ error: 'Erreur serveur' });
+router.get('/records/:id',
+    authenticate,
+    requireRole('practitioner'),
+    // 🎯 Ici, on passe une fonction qui sera évaluée avec le 'req' de la requête en cours
+    logAction('VIEW_RECORD', (req) => `Dossier Patient ID: ${req.params.id}`),
+    async (req, res) => {
+        // ... logique du contrôleur ...
+        res.json({ message: 'Dossier récupéré' });
     }
-});
+);
 
 // TODO: Aya ajoutera ici les autres routes sécurisées de la même manière
 
