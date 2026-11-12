@@ -2,18 +2,20 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './shared/context/AuthContext';
 import Layout from './shared/components/Layout';
 
-// 1. Import de la Landing Page et du Login
+// Pages publiques
 import Landing from './shared/pages/Landing';
 import Login from './modules/auth/pages/Login';
+import Signup from './modules/auth/pages/Signup';
+import SignupPractitioner from './modules/auth/pages/SignupPractitioner';
 
-// 2. Import des pages de l'application (Dashboard, etc.)
+// Pages de l'application
 import Dashboard from './shared/pages/Dashboard';
 import Appointments from './modules/patient/pages/Appointments';
 import BookAppointment from './modules/patient/pages/BookAppointment';
 import Records from './modules/patient/pages/Records';
 import Results from './modules/patient/pages/Results';
 
-// 3. Import des pages PRATICIEN (US-18 à US-26)
+// Pages praticien (US-18 à US-26)
 import Disponibilites from './modules/practitioner/pages/Disponibilites';
 import Agenda from './modules/practitioner/pages/Agenda';
 import Patients from './modules/practitioner/pages/Patients';
@@ -26,7 +28,12 @@ import AdminUsers from './modules/admin/pages/AdminUsers';
 import AdminCliniques from './modules/admin/pages/AdminCliniques';
 import AdminAudit from './modules/admin/pages/AdminAudit';
 
-// Composant de protection des routes
+// Pages admin
+import AdminUsers from './modules/admin/pages/AdminUsers';
+import AdminCliniques from './modules/admin/pages/AdminClinique';
+import AdminAudit from './modules/admin/pages/AdminAudit';
+
+// Protection : utilisateur connecté
 function PrivateRoute({ children }) {
     const { user, loading } = useAuth();
     if (loading) {
@@ -55,19 +62,18 @@ function DashboardRouter() {
 export default function App() {
     return (
         <Routes>
-            {/* Route publique : Page d'accueil */}
+            {/* Routes publiques */}
             <Route path="/" element={<Landing />} />
-
-            {/* Route publique : Page de connexion */}
             <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/signup-practitioner" element={<SignupPractitioner />} />
 
-            {/* Routes protégées : Application (accessible uniquement si connecté) */}
+            {/* Routes protégées */}
             <Route path="/app" element={<PrivateRoute><Layout /></PrivateRoute>}>
                 {/* On utilise DashboardRouter au lieu de Dashboard */}
                 <Route index element={<DashboardRouter />} />
 
                 <Route path="appointments" element={<Appointments />} />
-                <Route path="book" element={<BookAppointment />} />
                 <Route path="records" element={<Records />} />
                 <Route path="results" element={<Results />} />
                 <Route path="disponibilites" element={<Disponibilites />} />  
@@ -83,7 +89,7 @@ export default function App() {
                 <Route path="admin/audit" element={<RoleRoute roles={['admin']}><AdminAudit /></RoleRoute>} />
             </Route>
 
-            {/* Redirection des pages inexistantes vers l'accueil */}
+            {/* Pages inexistantes */}
             <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
     );
