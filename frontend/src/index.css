@@ -13,13 +13,13 @@
 }
 
 @layer components {
-  /* Boutons */
+  /* ✅ Boutons - bg-white remplacé par bg-surface */
   .btn-primary {
     @apply inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:bg-primary-dark hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg border-2 border-primary bg-white px-6 py-3 text-sm font-semibold text-primary transition-all hover:bg-primary-50 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2;
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border-2 border-primary bg-surface px-6 py-3 text-sm font-semibold text-primary transition-all hover:bg-primary-50 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2;
   }
 
   .btn-ghost {
@@ -27,21 +27,22 @@
   }
 
   .btn-outline {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg border-2 border-outline-variant bg-white px-6 py-3 text-sm font-semibold text-on-surface transition hover:border-primary hover:text-primary;
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border-2 border-outline-variant bg-surface px-6 py-3 text-sm font-semibold text-on-surface transition hover:border-primary hover:text-primary;
   }
 
-  /* Cards */
+  /* ✅ Cards - bg-white remplacé par bg-surface */
   .card {
-    @apply rounded-xl border border-outline-variant bg-white p-6 shadow-sm transition-all hover:shadow-md;
+    @apply rounded-xl border border-outline-variant bg-surface p-6 shadow-sm transition-all hover:shadow-md;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
   }
 
   .card-hover {
     @apply card hover:-translate-y-1 hover:border-primary/30;
   }
 
-  /* Formulaires */
+  /* ✅ Formulaires - bg-white remplacé par bg-surface */
   .input {
-    @apply w-full rounded-lg border-2 border-outline-variant bg-white px-4 py-3 text-sm text-on-surface placeholder:text-outline transition focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20;
+    @apply w-full rounded-lg border-2 border-outline-variant bg-surface px-4 py-3 text-sm text-on-surface placeholder:text-outline transition focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20;
   }
 
   .label {
@@ -88,7 +89,7 @@
 
   /* Hero Section */
   .hero-gradient {
-    @apply bg-gradient-to-br from-primary-50 via-white to-secondary-container;
+    @apply bg-gradient-to-br from-primary-50 via-surface to-secondary-container;
   }
 
   /* Stat Cards */

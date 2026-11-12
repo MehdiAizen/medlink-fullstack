@@ -1,34 +1,42 @@
 import { Router } from 'express';
 import { authenticate, requireRole } from '../../shared/middleware/auth.js';
-import { logAction } from '../../shared/middleware/audit-logger.js';
-import pool from '../../shared/utils/db.js';
+import { 
+  getAppointments, 
+  patchAppointmentStatus, 
+  getDisponibilites,
+  postDisponibilite,
+  removeDisponibilite, 
+  searchPatients,
+  getPatientRecords, 
+  postMedicalRecord,
+  postLabResult,
+  getPatientResults,
+  listRecords // ✅ 1. IMPORT AJOUTÉ ICI
+} from './practitioner.controller.js';
 
 const router = Router();
 
-/**
- * Route de test et de production pour les rendez-vous praticien (US-39, US-62)
- * ⚠️ L'ORDRE EST CRUCIAL :
- * 1. authenticate : vérifie le JWT et remplit req.user
- * 2. requireRole : vérifie que req.user.role est 'practitioner' ou 'admin'
- * 3. logAction : (optionnel ici, mais obligatoire pour l'accès aux dossiers US-47)
- */
-router.get('/appointments', authenticate, requireRole('practitioner', 'admin'), (req, res) => {
-    // Si le code arrive ici, c'est que la sécurité a VALIDÉ l'accès
-    res.status(200).json({
-        message: 'Accès autorisé : Vous êtes bien un praticien ou un admin.',
-        user: req.user.email
-    });
-});
-router.get('/records/:id', authenticate, requireRole('practitioner'), logAction('VIEW_RECORD', (req) => `Dossier Patient ID: ${req.params.id}`), async (req, res) => {
-    try {
-        // Simulation de récupération du dossier
-        const record = { id: req.params.id, diagnosis: 'HTA Grade 1', notes: 'Patient stable' };
-        res.json(record);
-    } catch (err) {
-        res.status(500).json({ error: 'Erreur serveur' });
-    }
-});
+// GET /api/practitioner/appointments — Agenda du praticien (US-19)
+router.get('/appointments', authenticate, requireRole('practitioner'), getAppointments);
 
-// TODO: Aya ajoutera ici les autres routes sécurisées de la même manière
+// PATCH /api/practitioner/appointments/:id — Confirmer / Annuler / Terminer (US-19, US-20)
+router.patch('/appointments/:id', authenticate, requireRole('practitioner'), patchAppointmentStatus);
+
+// --- Disponibilités (US-18, US-21) ---
+router.get('/disponibilites', authenticate, requireRole('practitioner'), getDisponibilites);
+router.post('/disponibilites', authenticate, requireRole('practitioner'), postDisponibilite);
+router.delete('/disponibilites/:id', authenticate, requireRole('practitioner'), removeDisponibilite);
+
+// --- Patients & dossiers (US-22, US-23, US-47) ---
+router.get('/patients', authenticate, requireRole('practitioner'), searchPatients);
+router.get('/patients/:id/records', authenticate, requireRole('practitioner'), getPatientRecords);
+router.get('/patients/:id/results', authenticate, requireRole('practitioner'), getPatientResults);
+
+// --- Comptes-rendus & résultats (US-24, US-25, US-26) ---
+// ✅ 2. ROUTE GET /records AJOUTÉE ICI
+router.get('/records', authenticate, requireRole('practitioner'), listRecords);
+
+router.post('/patients/:id/records', authenticate, requireRole('practitioner'), postMedicalRecord);
+router.post('/patients/:id/results', authenticate, requireRole('practitioner'), postLabResult);
 
 export default router;

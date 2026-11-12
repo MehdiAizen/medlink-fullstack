@@ -13,6 +13,13 @@ import BookAppointment from './modules/patient/pages/BookAppointment';
 import Records from './modules/patient/pages/Records';
 import Results from './modules/patient/pages/Results';
 
+// 3. Import des pages PRATICIEN (US-18 à US-26)
+import Disponibilites from './modules/practitioner/pages/Disponibilites';
+import Agenda from './modules/practitioner/pages/Agenda';
+import Patients from './modules/practitioner/pages/Patients';
+import DossiersMedicaux from './modules/practitioner/pages/DossiersMedicaux';
+import ComptesRendus from './modules/practitioner/pages/ComptesRendus';
+import PublierResultats from './modules/practitioner/pages/PublierResultats';
 // 3. Back-office administrateur (NOUVEAU)
 import AdminDashboard from './modules/admin/pages/Admin';
 import AdminUsers from './modules/admin/pages/AdminUsers';
@@ -48,13 +55,13 @@ function DashboardRouter() {
 export default function App() {
     return (
         <Routes>
-            {/* ✅ Route publique : Page d'accueil */}
+            {/* Route publique : Page d'accueil */}
             <Route path="/" element={<Landing />} />
 
-            {/* ✅ Route publique : Page de connexion */}
+            {/* Route publique : Page de connexion */}
             <Route path="/login" element={<Login />} />
 
-            {/* ✅ Routes protégées : Application (accessible uniquement si connecté) */}
+            {/* Routes protégées : Application (accessible uniquement si connecté) */}
             <Route path="/app" element={<PrivateRoute><Layout /></PrivateRoute>}>
                 {/* On utilise DashboardRouter au lieu de Dashboard */}
                 <Route index element={<DashboardRouter />} />
@@ -63,6 +70,12 @@ export default function App() {
                 <Route path="book" element={<BookAppointment />} />
                 <Route path="records" element={<Records />} />
                 <Route path="results" element={<Results />} />
+                <Route path="disponibilites" element={<Disponibilites />} />  
+                <Route path="agenda" element={<Agenda />} />                    
+                <Route path="patients" element={<Patients />} />                
+                <Route path="dossiers/:id" element={<DossiersMedicaux />} />        
+                <Route path="comptes-rendus" element={<ComptesRendus />} />      
+                <Route path="publier-resultats" element={<PublierResultats />} /> 
 
                 {/* Routes Admin (NOUVEAU) */}
                 <Route path="admin/users" element={<RoleRoute roles={['admin']}><AdminUsers /></RoleRoute>} />
