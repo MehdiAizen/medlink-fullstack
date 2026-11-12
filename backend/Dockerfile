@@ -1,5 +1,5 @@
 # Utiliser une image Node légère
-FROM node:20-alpine
+FROM node:18-alpine
 
 # Installer netcat (nécessaire pour que le script attende la base de données)
 RUN apk add --no-cache netcat-openbsd

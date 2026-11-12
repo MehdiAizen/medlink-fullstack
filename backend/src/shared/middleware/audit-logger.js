@@ -9,9 +9,11 @@ export function logAction(action, ressource = null) {
                 ? req.headers['x-forwarded-for'].split(',')[0].trim()
                 : req.ip;
 
+            const ressourceValue = typeof ressource === 'function' ? ressource(req) : ressource;
+
             await pool.query(
                 `INSERT INTO journal_audit (utilisateur_id, action, ressource, adresse_ip) VALUES ($1, $2, $3, $4)`,
-                [req.user?.id || null, action, ressource, clientIp]
+                [req.user?.id || null, action, ressourceValue, clientIp]
             );
         } catch (err) {
             // On loggue l'erreur côté serveur mais on ne bloque pas la requête de l'utilisateur
