@@ -11,6 +11,7 @@ import practitionerRoutes from "./modules/practitioner/practitioner.routes.js";
 import adminRoutes from "./modules/admin/admin.routes.js";
 import dashboardRoutes from "./shared/routes/dashboard.routes.js";
 import { startReminderWorker } from "./modules/patient/reminder.worker.js";
+import { enforceHTTPS } from './shared/middleware/enforce-https.js';
 
 dotenv.config();
 
@@ -35,7 +36,7 @@ app.use("/api/patient", patientRoutes);
 app.use("/api/practitioner", practitionerRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/dashboard", dashboardRoutes);
-
+app.use(enforceHTTPS);
 // Gestionnaire 404
 app.use((req, res) => {
   res.status(404).json({ error: "Route non trouvée" });

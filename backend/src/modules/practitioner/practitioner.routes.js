@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { authenticate, requireRole } from '../../shared/middleware/auth.js';
 import { logAction } from '../../shared/middleware/audit-logger.js';
+import pool from '../../shared/utils/db.js';
 
 const router = Router();
 
@@ -17,6 +18,15 @@ router.get('/appointments', authenticate, requireRole('practitioner', 'admin'), 
         message: 'Accès autorisé : Vous êtes bien un praticien ou un admin.',
         user: req.user.email
     });
+});
+router.get('/records/:id', authenticate, requireRole('practitioner'), logAction('VIEW_RECORD', (req) => `Dossier Patient ID: ${req.params.id}`), async (req, res) => {
+    try {
+        // Simulation de récupération du dossier
+        const record = { id: req.params.id, diagnosis: 'HTA Grade 1', notes: 'Patient stable' };
+        res.json(record);
+    } catch (err) {
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
 });
 
 // TODO: Aya ajoutera ici les autres routes sécurisées de la même manière
