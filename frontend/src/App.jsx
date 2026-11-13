@@ -11,7 +11,7 @@ import Login from './modules/auth/pages/Login';
 import Dashboard from './shared/pages/Dashboard';
 import Appointments from './modules/patient/pages/Appointments';
 import BookAppointment from './modules/patient/pages/BookAppointment';
-import Records from './modules/patient/pages/Records';
+import MedicalRecords from './modules/patient/pages/MedicalRecords';
 import Results from './modules/patient/pages/Results';
 
 // Composant de protection des routes
@@ -42,7 +42,7 @@ export default function App() {
                 <Route index element={<Dashboard />} />
                 <Route path="appointments" element={<Appointments />} />
                 <Route path="book" element={<BookAppointment />} />
-                <Route path="records" element={<Records />} />
+                <Route path="records" element={<MedicalRecords />} />
                 <Route path="results" element={<Results />} />
                 <Route path="profile" element={<Profile />} />
             </Route>

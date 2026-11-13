@@ -9,6 +9,7 @@ import {
   rescheduleAppointment,
   getResults,
   updatePatientProfile,
+  getMedicalRecords,
 } from "./patient.controller.js";
 
 const bookingLimiter = rateLimit({
@@ -213,5 +214,19 @@ router.get("/records/results", getResults);
  *         description: Profil mis à jour
  */
 router.put("/profile", updatePatientProfile);
+
+/**
+ * @openapi
+ * /api/patient/records:
+ *   get:
+ *     summary: Récupère le dossier médical du patient (avec journalisation)
+ *     tags: [Patient - M2]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Liste des dossiers médicaux
+ */
+router.get("/records", getMedicalRecords);
 
 export default router;

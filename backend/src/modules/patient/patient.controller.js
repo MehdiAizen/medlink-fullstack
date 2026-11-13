@@ -4,6 +4,7 @@ import {
   bookAppointment,
   listPatientResults,
   updateProfile,
+  listMedicalRecords,
   cancelAppointment as cancelAppointmentService,
   rescheduleAppointment as rescheduleAppointmentService,
 } from "./patient.service.js";
@@ -125,5 +126,28 @@ export async function updatePatientProfile(req, res) {
     res.json({ message: "Profil mis à jour", user: updated });
   } catch (error) {
     res.status(400).json({ error: error.message });
+  }
+}
+
+export async function getMedicalRecords(req, res) {
+  try {
+    const records = await listMedicalRecords(req.user.id);
+
+    // Journalisation (US-14)
+    await pool.query(
+      `INSERT INTO journal_audit (utilisateur_id, action, ressource, adresse_ip) 
+       VALUES ($1, $2, $3, $4)`,
+      [
+        req.user.id,
+        "VIEW_MEDICAL_RECORDS",
+        "Consultation du dossier médical",
+        req.ip,
+      ],
+    );
+
+    res.json(records);
+  } catch (error) {
+    console.error("Erreur dossier médical :", error);
+    res.status(500).json({ error: "Impossible de charger le dossier médical" });
   }
 }

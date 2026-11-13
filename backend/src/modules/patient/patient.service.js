@@ -290,3 +290,17 @@ export async function updateProfile(patientId, data) {
 
   return result.rows[0];
 }
+
+export async function listMedicalRecords(patientId) {
+  const result = await pool.query(
+    `SELECT 
+       m.id, m.title, m.diagnosis, m.notes, m.record_date,
+       u.full_name AS practitioner_name, u.specialty
+     FROM medical_records m
+     LEFT JOIN users u ON m.practitioner_id = u.id
+     WHERE m.patient_id = $1
+     ORDER BY m.record_date DESC`,
+    [patientId],
+  );
+  return result.rows;
+}
