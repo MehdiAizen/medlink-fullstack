@@ -13,10 +13,14 @@ import pool from "../../shared/utils/db.js";
 
 export async function getPractitioners(req, res) {
   try {
-    const practitioners = await listPractitioners();
+    const filters = {
+      specialty: req.query.specialty,
+      search: req.query.search,
+    };
+    const practitioners = await listPractitioners(filters);
     res.json(practitioners);
   } catch (error) {
-    console.error("Erreur lors du chargement des praticiens :", error);
+    console.error("Erreur praticiens :", error);
     res.status(500).json({ error: "Impossible de charger les praticiens" });
   }
 }

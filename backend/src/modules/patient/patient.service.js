@@ -1,16 +1,32 @@
 import pool from "../../shared/utils/db.js";
 
-export async function listPractitioners() {
-  const result = await pool.query(`
-    SELECT
-      id,
-      full_name,
-      specialty
-    FROM users
-    WHERE role = 'practitioner'
-    ORDER BY full_name
-  `);
+export async function listPractitioners(filters = {}) {
+  let query = `
+    SELECT u.id, u.full_name, u.specialty, 
+           array_agg(DISTINCT c.nom) FILTER (WHERE c.nom IS NOT NULL) as cliniques
+    FROM users u
+    LEFT JOIN practitioner_clinique pc ON u.id = pc.practitioner_id
+    LEFT JOIN cliniques c ON pc.clinique_id = c.id
+    WHERE u.role = 'practitioner'
+  `;
+  const values = [];
+  let index = 1;
 
+  if (filters.specialty) {
+    query += ` AND u.specialty ILIKE $${index}`;
+    values.push(`%${filters.specialty}%`);
+    index++;
+  }
+
+  if (filters.search) {
+    query += ` AND u.full_name ILIKE $${index}`;
+    values.push(`%${filters.search}%`);
+    index++;
+  }
+
+  query += ` GROUP BY u.id, u.full_name, u.specialty ORDER BY u.full_name`;
+
+  const result = await pool.query(query, values);
   return result.rows;
 }
 
