@@ -1,8 +1,8 @@
-import bcrypt from 'bcryptjs';
-import pool from './shared/utils/db.js';
+import bcrypt from "bcryptjs";
+import pool from "./shared/utils/db.js";
 
 async function seed() {
-  console.log('🌱 Début du seeding de la base MedLink...');
+  console.log("🌱 Début du seeding de la base MedLink...");
 
   try {
     // 1. Création des tables
@@ -15,6 +15,7 @@ async function seed() {
         role VARCHAR(20) NOT NULL CHECK (role IN ('patient', 'practitioner', 'admin')),
         specialty VARCHAR(100),
         phone VARCHAR(30),
+        consent_given BOOLEAN DEFAULT FALSE,
         created_at TIMESTAMPTZ DEFAULT NOW()
         );
 
@@ -88,25 +89,26 @@ async function seed() {
         );
     `);
 
-      await pool.query(`
+    await pool.query(`
       ALTER TABLE users ADD COLUMN IF NOT EXISTS keycloak_id UUID UNIQUE;
       ALTER TABLE users ALTER COLUMN password_hash DROP NOT NULL;
     `);
 
-
-    const hash = await bcrypt.hash('password123', 10);
+    const hash = await bcrypt.hash("password123", 10);
 
     // 2. Nettoyage des anciennes données (ordre important pour les contraintes CASCADE)
-    await pool.query('TRUNCATE notifications, journal_audit, lab_results, medical_records, appointments, practitioner_clinique, cliniques, users RESTART IDENTITY CASCADE');
-    console.log('🧹 Tables vidées.');
+    await pool.query(
+      "TRUNCATE notifications, journal_audit, lab_results, medical_records, appointments, practitioner_clinique, cliniques, users RESTART IDENTITY CASCADE",
+    );
+    console.log("🧹 Tables vidées.");
 
     // 3. Insertion des Cliniques (US-19, US-29, US-31)
     const cliniques = await pool.query(
-        `INSERT INTO cliniques (nom, ville, adresse, telephone) VALUES
+      `INSERT INTO cliniques (nom, ville, adresse, telephone) VALUES
                                                                   ('Clinique El Amen', 'Sousse', 'Avenue Habib Bourguiba, Sousse', '+216 73 111 111'),
                                                                   ('Clinique Taoufik', 'Sfax', 'Route de Tunis, Sfax', '+216 74 222 222'),
                                                                   ('Clinique Pasteur', 'Tunis', 'Avenue Mohamed V, Tunis', '+216 71 333 333')
-          RETURNING id, nom, ville`
+          RETURNING id, nom, ville`,
     );
     const cliniqueSousse = cliniques.rows[0].id;
     const cliniqueSfax = cliniques.rows[1].id;
@@ -114,14 +116,15 @@ async function seed() {
 
     // 4. Insertion des Utilisateurs
     const users = await pool.query(
-        `INSERT INTO users (email, password_hash, full_name, role, specialty, phone) VALUES
+      `INSERT INTO users (email, password_hash, full_name, role, specialty, phone) VALUES
                                                                                        ('admin@medlink.tn', $1, 'Admin Principal', 'admin', NULL, '+216 71 000 000'),
                                                                                        ('patient@medlink.tn', $1, 'Amine Ben Salah', 'patient', NULL, '+216 98 123 456'),
+                                                                                       ('ons@medlink.tn', $1, 'Ons Ferid', 'patient', NULL, '+216 25 943 417'),
                                                                                        ('sara.patient@medlink.tn', $1, 'Sara Trabelsi', 'patient', NULL, '+216 22 456 789'),
                                                                                        ('doctor@medlink.tn', $1, 'Dr. Karim Mansouri', 'practitioner', 'Cardiologie', '+216 71 234 567'),
                                                                                        ('pediatre@medlink.tn', $1, 'Dr. Leila Gharbi', 'practitioner', 'Pédiatrie', '+216 71 345 678')
           RETURNING id, email, role`,
-        [hash]
+      [hash],
     );
 
     const admin = users.rows[0].id;
@@ -132,54 +135,64 @@ async function seed() {
 
     // 5. Affectation des praticiens aux cliniques (US-29)
     await pool.query(
-        `INSERT INTO practitioner_clinique (practitioner_id, clinique_id) VALUES
+      `INSERT INTO practitioner_clinique (practitioner_id, clinique_id) VALUES
                                                                             ($1, $2), ($1, $3), -- Dr. Karim à Sousse et Tunis
                                                                             ($4, $2)            -- Dr. Leila à Sfax`,
-        [practitioner1, cliniqueSousse, cliniqueTunis, practitioner2]
+      [practitioner1, cliniqueSousse, cliniqueTunis, practitioner2],
     );
 
     // 6. Insertion des Rendez-vous (avec clinique_id)
-      await pool.query(
-          `INSERT INTO appointments (patient_id, practitioner_id, clinique_id, appointment_date, appointment_time, reason, type, status) VALUES
+    await pool.query(
+      `INSERT INTO appointments (patient_id, practitioner_id, clinique_id, appointment_date, appointment_time, reason, type, status) VALUES
                                                                                                                                              ($1, $3, $5, CURRENT_DATE + 2, '09:30', 'Contrôle tension', 'consultation', 'confirmed'),
                                                                                                                                              ($1, $3, $6, CURRENT_DATE + 5, '14:00', 'Bilan annuel', 'consultation', 'pending'),
                                                                                                                                              ($2, $4, $7, CURRENT_DATE + 1, '10:15', 'Vaccination enfant', 'consultation', 'confirmed'),
                                                                                                                                              ($1, $3, $5, CURRENT_DATE - 10, '11:00', 'Suivi post-infarctus', 'suivi', 'completed')`,
-          [patient1, patient2, practitioner1, practitioner2, cliniqueSousse, cliniqueTunis, cliniqueSfax]
-      );
+      [
+        patient1,
+        patient2,
+        practitioner1,
+        practitioner2,
+        cliniqueSousse,
+        cliniqueTunis,
+        cliniqueSfax,
+      ],
+    );
 
     // 7. Dossiers médicaux et Résultats
-      await pool.query(
-          `INSERT INTO medical_records (patient_id, practitioner_id, title, diagnosis, notes, record_date) VALUES
+    await pool.query(
+      `INSERT INTO medical_records (patient_id, practitioner_id, title, diagnosis, notes, record_date) VALUES
               ($1, $2, 'Consultation cardiologique', 'HTA grade 1', 'Patient stable. Traitement maintenu.', CURRENT_DATE - 10)`,
-          [patient1, practitioner1]
-      );
+      [patient1, practitioner1],
+    );
 
     await pool.query(
-        `INSERT INTO lab_results (patient_id, test_name, result_value, unit, reference_range, status, result_date) VALUES
+      `INSERT INTO lab_results (patient_id, test_name, result_value, unit, reference_range, status, result_date) VALUES
                                                                                                                      ($1, 'Cholestérol total', '1.95', 'g/L', '1.50 - 2.00', 'normal', CURRENT_DATE - 12),
                                                                                                                      ($2, 'Hémoglobine', '13.2', 'g/dL', '12.0 - 16.0', 'normal', CURRENT_DATE - 15)`,
-        [patient1, patient2]
+      [patient1, patient2],
     );
 
     // 8. Journal d'audit de démonstration (US-35, US-47)
     await pool.query(
-        `INSERT INTO journal_audit (utilisateur_id, action, ressource, adresse_ip) VALUES
+      `INSERT INTO journal_audit (utilisateur_id, action, ressource, adresse_ip) VALUES
                                                                                      ($1, 'LOGIN', 'Authentification réussie', '192.168.1.10'),
                                                                                      ($2, 'VIEW_RECORD', 'Dossier médical #1', '192.168.1.10')`,
-        [patient1, practitioner1]
+      [patient1, practitioner1],
     );
 
-    console.log('✅ Seed terminé avec succès !\n');
-    console.log('🔑 Comptes de démo (Mot de passe : password123) :');
-    console.log('  🔒 Admin       : admin@medlink.tn');
-    console.log('  👤 Patient     : patient@medlink.tn');
-    console.log('  👨‍⚕️ Praticien  : doctor@medlink.tn (Cardiologie - Sousse/Tunis)');
-    console.log('  👩‍⚕️ Praticien  : pediatre@medlink.tn (Pédiatrie - Sfax)\n');
+    console.log("✅ Seed terminé avec succès !\n");
+    console.log("🔑 Comptes de démo (Mot de passe : password123) :");
+    console.log("  🔒 Admin       : admin@medlink.tn");
+    console.log("  👤 Patient     : patient@medlink.tn");
+    console.log(
+      "  👨‍⚕️ Praticien  : doctor@medlink.tn (Cardiologie - Sousse/Tunis)",
+    );
+    console.log("  👩‍⚕️ Praticien  : pediatre@medlink.tn (Pédiatrie - Sfax)\n");
 
     process.exit(0);
   } catch (err) {
-    console.error('❌ Échec du seed:', err);
+    console.error("❌ Échec du seed:", err);
     process.exit(1);
   }
 }

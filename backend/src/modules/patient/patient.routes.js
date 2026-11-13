@@ -8,6 +8,7 @@ import {
   cancelAppointment,
   rescheduleAppointment,
   getResults,
+  updatePatientProfile,
 } from "./patient.controller.js";
 
 const bookingLimiter = rateLimit({
@@ -187,5 +188,30 @@ router.patch("/appointments/:id/reschedule", rescheduleAppointment);
  *         description: Non authentifié
  */
 router.get("/records/results", getResults);
+
+/**
+ * @openapi
+ * /api/patient/profile:
+ *   put:
+ *     summary: Mettre à jour le profil patient (téléphone, consentement INPDP)
+ *     tags: [Patient - M2]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               phone:
+ *                 type: string
+ *               consent_given:
+ *                 type: boolean
+ *     responses:
+ *       200:
+ *         description: Profil mis à jour
+ */
+router.put("/profile", updatePatientProfile);
 
 export default router;

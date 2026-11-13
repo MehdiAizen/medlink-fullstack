@@ -271,3 +271,22 @@ export async function listPatientResults(patientId) {
   );
   return result.rows;
 }
+
+export async function updateProfile(patientId, data) {
+  const { phone, consent_given } = data;
+
+  const result = await pool.query(
+    `UPDATE users 
+     SET phone = COALESCE($1, phone), 
+         consent_given = COALESCE($2, consent_given)
+     WHERE id = $3 AND role = 'patient'
+     RETURNING id, email, full_name, phone, consent_given`,
+    [phone, consent_given, patientId],
+  );
+
+  if (result.rows.length === 0) {
+    throw new Error("Patient introuvable");
+  }
+
+  return result.rows[0];
+}

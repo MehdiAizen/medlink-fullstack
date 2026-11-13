@@ -3,6 +3,7 @@ import {
   listPatientAppointments,
   bookAppointment,
   listPatientResults,
+  updateProfile,
   cancelAppointment as cancelAppointmentService,
   rescheduleAppointment as rescheduleAppointmentService,
 } from "./patient.service.js";
@@ -115,5 +116,14 @@ export async function getResults(req, res) {
   } catch (error) {
     console.error("Erreur lors du chargement des résultats :", error);
     res.status(500).json({ error: "Impossible de charger les résultats" });
+  }
+}
+
+export async function updatePatientProfile(req, res) {
+  try {
+    const updated = await updateProfile(req.user.id, req.body);
+    res.json({ message: "Profil mis à jour", user: updated });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
   }
 }

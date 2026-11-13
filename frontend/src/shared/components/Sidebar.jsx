@@ -8,6 +8,7 @@ const patientNav = [
     { to: '/app/book', label: 'Prendre RDV', icon: '➕' },
     { to: '/app/records', label: 'Dossier médical', icon: '📋' },
     { to: '/app/results', label: 'Mes résultats', icon: '🧪' },
+      { to: '/app/profile', label: 'Mon Profil', icon: '👤' },
 ];
 
 const practitionerNav = [

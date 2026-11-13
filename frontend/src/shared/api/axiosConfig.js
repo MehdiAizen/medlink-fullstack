@@ -22,8 +22,10 @@ async function request(path, options = {}) {
 }
 
 const qs = (params = {}) => {
-    const q = new URLSearchParams(Object.entries(params).filter(([, v]) => v !== '' && v != null)).toString();
-    return q ? `?${q}` : '';
+  const q = new URLSearchParams(
+    Object.entries(params).filter(([, v]) => v !== "" && v != null),
+  ).toString();
+  return q ? `?${q}` : "";
 };
 const withBody = (method, body) => ({ method, body: JSON.stringify(body) });
 
@@ -71,6 +73,12 @@ export const api = {
       list: () => request("/patient/records"),
       results: () => request("/patient/records/results"),
     },
+
+    updateProfile: (data) =>
+      request("/patient/profile", {
+        method: "PUT",
+        body: JSON.stringify(data),
+      }),
   },
 
   // --- Module PRACTITIONER ---
@@ -84,28 +92,39 @@ export const api = {
         }),
     },
 
-      // --- Module admin
-      admin: {
-          stats: () => request('/admin/stats'),
-          users: {
-              list: (params) => request(`/admin/users${qs(params)}`),
-              create: (data) => request('/admin/users', withBody('POST', data)),
-              update: (id, data) => request(`/admin/users/${id}`, withBody('PATCH', data)),
-              setStatus: (id, enabled) => request(`/admin/users/${id}/status`, withBody('PATCH', { enabled })),
-              resetPassword: (id, password) => request(`/admin/users/${id}/reset-password`, withBody('POST', { password })),
-              remove: (id, confirm_email) => request(`/admin/users/${id}`, withBody('DELETE', { confirm_email })),
-              sync: () => request('/admin/users/sync', { method: 'POST' }),
-          },
-          cliniques: {
-              list: () => request('/admin/cliniques'),
-              create: (data) => request('/admin/cliniques', withBody('POST', data)),
-              update: (id, data) => request(`/admin/cliniques/${id}`, withBody('PUT', data)),
-              remove: (id) => request(`/admin/cliniques/${id}`, { method: 'DELETE' }),
-              setPractitioners: (id, practitioner_ids) =>
-                  request(`/admin/cliniques/${id}/practitioners`, withBody('PUT', { practitioner_ids })),
-          },
-          audit: (params) => request(`/admin/audit${qs(params)}`),
+    // --- Module admin
+    admin: {
+      stats: () => request("/admin/stats"),
+      users: {
+        list: (params) => request(`/admin/users${qs(params)}`),
+        create: (data) => request("/admin/users", withBody("POST", data)),
+        update: (id, data) =>
+          request(`/admin/users/${id}`, withBody("PATCH", data)),
+        setStatus: (id, enabled) =>
+          request(`/admin/users/${id}/status`, withBody("PATCH", { enabled })),
+        resetPassword: (id, password) =>
+          request(
+            `/admin/users/${id}/reset-password`,
+            withBody("POST", { password }),
+          ),
+        remove: (id, confirm_email) =>
+          request(`/admin/users/${id}`, withBody("DELETE", { confirm_email })),
+        sync: () => request("/admin/users/sync", { method: "POST" }),
       },
+      cliniques: {
+        list: () => request("/admin/cliniques"),
+        create: (data) => request("/admin/cliniques", withBody("POST", data)),
+        update: (id, data) =>
+          request(`/admin/cliniques/${id}`, withBody("PUT", data)),
+        remove: (id) => request(`/admin/cliniques/${id}`, { method: "DELETE" }),
+        setPractitioners: (id, practitioner_ids) =>
+          request(
+            `/admin/cliniques/${id}/practitioners`,
+            withBody("PUT", { practitioner_ids }),
+          ),
+      },
+      audit: (params) => request(`/admin/audit${qs(params)}`),
+    },
     records: {
       list: () => request("/practitioner/records"),
       create: (data) =>

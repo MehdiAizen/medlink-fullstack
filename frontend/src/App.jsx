@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './shared/context/AuthContext';
 import Layout from './shared/components/Layout';
+import Profile from './modules/patient/pages/Profile';
 
 // 1. Import de la Landing Page et du Login
 import Landing from './shared/pages/Landing';
@@ -43,6 +44,7 @@ export default function App() {
                 <Route path="book" element={<BookAppointment />} />
                 <Route path="records" element={<Records />} />
                 <Route path="results" element={<Results />} />
+                <Route path="profile" element={<Profile />} />
             </Route>
 
             {/* Redirection des pages inexistantes vers l'accueil */}
