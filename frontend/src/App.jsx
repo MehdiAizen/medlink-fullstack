@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './shared/context/AuthContext';
+import { Toaster } from 'react-hot-toast';
 import Layout from './shared/components/Layout';
 import Profile from './modules/patient/pages/Profile';
 
@@ -30,6 +31,9 @@ function PrivateRoute({ children }) {
 
 export default function App() {
     return (
+    <>
+        <Toaster position="top-right" />
+
         <Routes>
             {/* ✅ Route publique : Page d'accueil */}
             <Route path="/" element={<Landing />} />
@@ -50,5 +54,6 @@ export default function App() {
             {/* Redirection des pages inexistantes vers l'accueil */}
             <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+    </>
     );
 }
