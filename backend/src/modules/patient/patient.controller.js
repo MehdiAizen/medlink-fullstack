@@ -10,6 +10,7 @@ import {
 } from "./patient.service.js";
 
 import pool from "../../shared/utils/db.js";
+import PDFDocument from "pdfkit";
 
 export async function getPractitioners(req, res) {
   try {
@@ -160,7 +161,6 @@ export async function downloadResult(req, res) {
   try {
     const resultId = parseInt(req.params.id, 10);
 
-    // 1. On vérifie que le résultat appartient bien au patient (Anti-IDOR)
     const result = await pool.query(
       `SELECT r.*, u.full_name AS patient_name 
        FROM lab_results r
@@ -170,53 +170,147 @@ export async function downloadResult(req, res) {
     );
 
     if (result.rows.length === 0) {
-      return res
-        .status(404)
-        .json({ error: "Document introuvable ou non autorisé" });
+      return res.status(404).json({ error: "Document introuvable" });
     }
 
     const data = result.rows[0];
 
-    // 2. On journalise le téléchargement (Sécurité DevSecOps)
+    // Journalisation
     await pool.query(
       `INSERT INTO journal_audit (utilisateur_id, action, ressource, adresse_ip) 
        VALUES ($1, $2, $3, $4)`,
       [
         req.user.id,
         "DOWNLOAD_RESULT",
-        `Téléchargement du résultat #${resultId}`,
+        `Téléchargement PDF résultat #${resultId}`,
         req.ip,
       ],
     );
 
-    // 3. On génère un document texte/HTML propre
-    const documentContent = `
-=========================================
-      MEDLINK - RÉSULTAT D'ANALYSE
-=========================================
-Patient : ${data.patient_name}
-Date    : ${new Date(data.result_date).toLocaleDateString("fr-FR")}
+    // --- GÉNÉRATION DU PDF ---
+    const doc = new PDFDocument();
 
------------------------------------------
-EXAMEN  : ${data.test_name}
-RÉSULTAT: ${data.result_value} ${data.unit}
-RÉFÉRENCE: ${data.reference_range}
-STATUT  : ${data.status.toUpperCase()}
------------------------------------------
-
-Ce document est généré automatiquement par MedLink.
-Document confidentiel - Ne pas partager.
-    `;
-
-    // 4. On envoie le fichier au navigateur pour qu'il le télécharge
-    res.setHeader("Content-Type", "text/plain; charset=utf-8");
+    // On dit au navigateur que c'est un fichier PDF à télécharger
+    res.setHeader("Content-Type", "application/pdf");
     res.setHeader(
       "Content-Disposition",
-      `attachment; filename="resultat-${resultId}.txt"`,
+      `attachment; filename="resultat-${resultId}.pdf"`,
     );
-    res.send(documentContent);
+
+    // On connecte le PDF au flux de réponse
+    doc.pipe(res);
+
+    // Design du PDF
+    doc
+      .fontSize(20)
+      .fillColor("#0F766E")
+      .text("MedLink - Résultat d'Analyse", { align: "center" });
+    doc.moveDown();
+    doc
+      .fontSize(12)
+      .fillColor("#333333")
+      .text(`Patient : ${data.patient_name}`);
+    doc.text(
+      `Date de l'examen : ${new Date(data.result_date).toLocaleDateString("fr-FR")}`,
+    );
+    doc.moveDown();
+
+    doc
+      .fontSize(14)
+      .fillColor("#000000")
+      .text(`Examen : ${data.test_name}`, { underline: true });
+    doc.moveDown(0.5);
+    doc.fontSize(12).text(`Résultat : ${data.result_value} ${data.unit}`);
+    doc.text(`Valeurs de référence : ${data.reference_range}`);
+    doc.text(`Statut : ${data.status.toUpperCase()}`);
+
+    doc.moveDown(2);
+    doc
+      .fontSize(10)
+      .fillColor("#888888")
+      .text(
+        "Ce document est généré automatiquement par MedLink. Document confidentiel.",
+        { align: "center" },
+      );
+
+    doc.end(); // On termine le PDF
   } catch (error) {
-    console.error("Erreur téléchargement :", error);
-    res.status(500).json({ error: "Erreur serveur" });
+    console.error("Erreur téléchargement PDF :", error);
+    if (!res.headersSent) res.status(500).json({ error: "Erreur serveur" });
+  }
+}
+
+export async function downloadMedicalRecord(req, res) {
+  try {
+    const recordId = parseInt(req.params.id, 10);
+
+    const result = await pool.query(
+      `SELECT m.*, u.full_name AS patient_name, p.full_name AS practitioner_name
+       FROM medical_records m
+       JOIN users u ON m.patient_id = u.id
+       LEFT JOIN users p ON m.practitioner_id = p.id
+       WHERE m.id = $1 AND m.patient_id = $2`,
+      [recordId, req.user.id],
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Dossier introuvable" });
+    }
+
+    const data = result.rows[0];
+
+    await pool.query(
+      `INSERT INTO journal_audit (utilisateur_id, action, ressource, adresse_ip) 
+       VALUES ($1, $2, $3, $4)`,
+      [
+        req.user.id,
+        "DOWNLOAD_RECORD",
+        `Téléchargement PDF dossier #${recordId}`,
+        req.ip,
+      ],
+    );
+
+    const doc = new PDFDocument();
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="dossier-medical-${recordId}.pdf"`,
+    );
+    doc.pipe(res);
+
+    doc
+      .fontSize(20)
+      .fillColor("#0F766E")
+      .text("MedLink - Dossier Médical", { align: "center" });
+    doc.moveDown();
+    doc
+      .fontSize(12)
+      .fillColor("#333333")
+      .text(`Patient : ${data.patient_name}`);
+    doc.text(`Praticien : ${data.practitioner_name || "Non spécifié"}`);
+    doc.text(
+      `Date : ${new Date(data.record_date).toLocaleDateString("fr-FR")}`,
+    );
+    doc.moveDown();
+
+    doc
+      .fontSize(14)
+      .fillColor("#000000")
+      .text(`Titre : ${data.title}`, { underline: true });
+    doc.moveDown(0.5);
+    doc.fontSize(12).text(`Diagnostic : ${data.diagnosis}`);
+    doc.moveDown(0.5);
+    doc.text(`Notes : ${data.notes}`);
+
+    doc.moveDown(2);
+    doc
+      .fontSize(10)
+      .fillColor("#888888")
+      .text("Document confidentiel généré par MedLink.", { align: "center" });
+
+    doc.end();
+  } catch (error) {
+    console.error("Erreur téléchargement PDF :", error);
+    if (!res.headersSent) res.status(500).json({ error: "Erreur serveur" });
   }
 }
