@@ -72,6 +72,8 @@ export const api = {
     records: {
       list: () => request("/patient/records"),
       results: () => request("/patient/records/results"),
+      downloadResult: (id) =>
+        request(`/patient/records/results/${id}/download`),
     },
 
     updateProfile: (data) =>

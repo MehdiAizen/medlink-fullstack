@@ -10,6 +10,7 @@ import {
   getResults,
   updatePatientProfile,
   getMedicalRecords,
+  downloadResult,
 } from "./patient.controller.js";
 
 const bookingLimiter = rateLimit({
@@ -228,5 +229,25 @@ router.put("/profile", updatePatientProfile);
  *         description: Liste des dossiers médicaux
  */
 router.get("/records", getMedicalRecords);
+
+/**
+ * @openapi
+ * /api/patient/records/results/{id}/download:
+ *   get:
+ *     summary: Télécharger un résultat d'analyse
+ *     tags: [Patient - M2]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Fichier téléchargé
+ */
+router.get("/records/results/:id/download", downloadResult);
 
 export default router;

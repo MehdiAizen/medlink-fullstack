@@ -155,3 +155,68 @@ export async function getMedicalRecords(req, res) {
     res.status(500).json({ error: "Impossible de charger le dossier médical" });
   }
 }
+
+export async function downloadResult(req, res) {
+  try {
+    const resultId = parseInt(req.params.id, 10);
+
+    // 1. On vérifie que le résultat appartient bien au patient (Anti-IDOR)
+    const result = await pool.query(
+      `SELECT r.*, u.full_name AS patient_name 
+       FROM lab_results r
+       JOIN users u ON r.patient_id = u.id
+       WHERE r.id = $1 AND r.patient_id = $2`,
+      [resultId, req.user.id],
+    );
+
+    if (result.rows.length === 0) {
+      return res
+        .status(404)
+        .json({ error: "Document introuvable ou non autorisé" });
+    }
+
+    const data = result.rows[0];
+
+    // 2. On journalise le téléchargement (Sécurité DevSecOps)
+    await pool.query(
+      `INSERT INTO journal_audit (utilisateur_id, action, ressource, adresse_ip) 
+       VALUES ($1, $2, $3, $4)`,
+      [
+        req.user.id,
+        "DOWNLOAD_RESULT",
+        `Téléchargement du résultat #${resultId}`,
+        req.ip,
+      ],
+    );
+
+    // 3. On génère un document texte/HTML propre
+    const documentContent = `
+=========================================
+      MEDLINK - RÉSULTAT D'ANALYSE
+=========================================
+Patient : ${data.patient_name}
+Date    : ${new Date(data.result_date).toLocaleDateString("fr-FR")}
+
+-----------------------------------------
+EXAMEN  : ${data.test_name}
+RÉSULTAT: ${data.result_value} ${data.unit}
+RÉFÉRENCE: ${data.reference_range}
+STATUT  : ${data.status.toUpperCase()}
+-----------------------------------------
+
+Ce document est généré automatiquement par MedLink.
+Document confidentiel - Ne pas partager.
+    `;
+
+    // 4. On envoie le fichier au navigateur pour qu'il le télécharge
+    res.setHeader("Content-Type", "text/plain; charset=utf-8");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="resultat-${resultId}.txt"`,
+    );
+    res.send(documentContent);
+  } catch (error) {
+    console.error("Erreur téléchargement :", error);
+    res.status(500).json({ error: "Erreur serveur" });
+  }
+}
