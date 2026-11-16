@@ -18,9 +18,12 @@ async function request(path, options = {}) {
   const data = await res.json().catch(() => ({}));
 
   if (!res.ok) {
-    throw new Error(data.error || `Erreur ${res.status}`);
+    const err = new Error(data.error || `Erreur ${res.status}`);
+    err.status = res.status;
+    err.code = data.code;
+    throw err;
   }
-  return data;
+  return data; // ← cette ligne doit rester, sinon /me renvoie undefined
 }
 
 // Routes publiques : pas de token. On garde les erreurs par champ (err.fields).
@@ -65,7 +68,7 @@ const auth = {
   me: () => request('/auth/me'),
   register: (payload) => publicPost('/auth/register', payload),
   practitionerOptions: () => request('/auth/practitioner-options'),
-  requestPractitioner: (payload) => publicPost('/auth/practitioner-requests', payload),
+  registerPractitioner: (payload) => publicPost('/auth/register-practitioner', payload),
 };
 
 // --- Module PATIENT ---
