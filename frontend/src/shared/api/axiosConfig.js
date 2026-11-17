@@ -12,19 +12,15 @@ async function request(path, options = {}) {
         ...options.headers,
     };
 
-    // 1. Priorité au token Keycloak s'il est authentifié
     if (keycloak && keycloak.authenticated) {
         try {
+            // On rafraîchit le token s'il expire dans moins de 30 secondes
             await keycloak.updateToken(30);
             headers.Authorization = `Bearer ${keycloak.token}`;
         } catch (error) {
-            console.error("Échec du rafraîchissement du token Keycloak :", error);
-        }
-    } else {
-        // 2. Fallback sur le token localStorage (si utilisé en parallèle ou en transition)
-        const token = getToken();
-        if (token) {
-            headers.Authorization = `Bearer ${token}`;
+            console.error("Session expirée, déconnexion forcée...");
+            keycloak.logout({ redirectUri: window.location.origin + '/login' });
+            return Promise.reject(error);
         }
     }
 
@@ -32,6 +28,12 @@ async function request(path, options = {}) {
         ...options,
         headers,
     });
+
+    if (res.status === 401) {
+        // Si le backend renvoie 401, on déconnecte l'utilisateur
+        keycloak.logout({ redirectUri: window.location.origin + '/login' });
+        throw new Error("Session expirée. Veuillez vous reconnecter.");
+    }
 
     const data = await res.json().catch(() => ({}));
 

@@ -17,7 +17,7 @@ RUN npm install
 COPY . .
 
 # Rendre le script exécutable
-RUN chmod +x entrypoint.sh
+RUN sed -i 's/\r$//' entrypoint.sh && chmod +x entrypoint.sh
 
 # Exposer le port (4000)
 EXPOSE 4000

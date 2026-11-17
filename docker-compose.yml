@@ -35,9 +35,9 @@ services:
       - JWT_SECRET=medlink_super_secret_jwt_2026
       - ALLOW_LEGACY_AUTH=true
       - KEYCLOAK_URL=http://keycloak:8080
-      - KEYCLOAK_PUBLIC_URL=http://localhost:8080
+      - KEYCLOAK_PUBLIC_URL=http://localhost:8081
       - KEYCLOAK_REALM=medlink
-      - KEYCLOAK_ADMIN_CLIENT_ID=medlink-admin-api
+      - KEYCLOAK_ADMIN_CLIENT_ID=medlink-backend
       - KEYCLOAK_ADMIN_CLIENT_SECRET=dev-admin-secret-change-me
     depends_on:
       db:
