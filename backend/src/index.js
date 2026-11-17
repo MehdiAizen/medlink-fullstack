@@ -14,7 +14,9 @@ import dashboardRoutes from "./shared/routes/dashboard.routes.js";
 import { startReminderWorker } from "./modules/patient/reminder.worker.js";
 import { enforceHTTPS } from './shared/middleware/enforce-https.js';
 
-dotenv.config();
+dotenv.config({
+  path: "../.env"
+});
 
 const app = express();
 const PORT = process.env.PORT || 4000;
