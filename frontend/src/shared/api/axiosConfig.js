@@ -41,7 +41,30 @@ async function request(path, options = {}) {
 
     return data;
 }
-
+// Téléchargement d'un fichier (ex. CSV) avec le même jeton que request()
+async function download(path, filename) {
+    const headers = {};
+    if (keycloak && keycloak.authenticated) {
+        await keycloak.updateToken(30);
+        headers.Authorization = `Bearer ${keycloak.token}`;
+    } else {
+        const token = getToken();
+        if (token) headers.Authorization = `Bearer ${token}`;
+    }
+    const res = await fetch(`${API_BASE}${path}`, { headers });
+    if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || `Erreur ${res.status}`);
+    }
+    const url = URL.createObjectURL(await res.blob());
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+}
 // Routes publiques : pas de token. On garde les erreurs par champ (err.fields).
 async function publicPost(path, payload) {
     const res = await fetch(`${API_BASE}${path}`, {
@@ -176,6 +199,27 @@ const admin = {
     },
 
     audit: (params) => request(`/admin/audit${qs(params)}`),
+    // US-30 : rendez-vous pris pour un patient
+    patients: (q) => request(`/admin/patients${qs({ q })}`),
+    bookingOptions: () => request("/admin/booking-options"),
+    appointments: {
+        list: (params) => request(`/admin/appointments${qs(params)}`),
+        create: (data) => request("/admin/appointments", withBody("POST", data)),
+        cancel: (id) => request(`/admin/appointments/${id}/cancel`, { method: "PATCH" }),
+    },
+
+    // US-50 : synthèse ; US-32 / US-46 : statistiques anonymisées
+    synthese: (params) => request(`/admin/synthese${qs(params)}`),
+    anonymizedStats: (params) => request(`/admin/stats/anonymized${qs(params)}`),
+    exportStats: (params) =>
+        download(`/admin/stats/export${qs(params)}`, `medlink-statistiques-anonymisees_${params.from}_${params.to}.csv`),
+
+    // US-51 : suivi de la baisse des appels
+    appels: {
+        get: (params) => request(`/admin/appels${qs(params)}`),
+        saveWeek: (data) => request("/admin/appels/semaine", withBody("PUT", data)),
+        saveReference: (data) => request("/admin/appels/reference", withBody("PUT", data)),
+    },
 };
 
 // ================= API EXPORT =================
