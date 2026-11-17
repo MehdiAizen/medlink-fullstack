@@ -1,148 +1,162 @@
+
 import { Router } from "express";
 import pool from "../utils/db.js";
-import { authenticate, requireRole } from "../middleware/auth.js";
+import { authenticate } from "../middleware/auth.js";
 
 const router = Router();
 
-/**
- * @openapi
- * /api/dashboard:
- *   get:
- *     summary: Récupère les statistiques du tableau de bord (adapté au rôle)
- *     description: Renvoie des données différentes si l'utilisateur est un patient ou un praticien.
- *     tags: [Dashboard]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Succès (le schéma de réponse dépend du rôle de l'utilisateur connecté)
- *         content:
- *           application/json:
- *             examples:
- *               patient:
- *                 summary: Réponse pour un patient
- *                 value:
- *                   role: patient
- *                   stats:
- *                     upcoming_appointments: 2
- *                     medical_records: 1
- *                     lab_results: 3
- *                   upcoming: []
- *               practitioner:
- *                 summary: Réponse pour un praticien
- *                 value:
- *                   role: practitioner
- *                   stats:
- *                     today_appointments: 5
- *                     pending_appointments: 1
- *                     total_patients: 42
- *                   today: []
- *       401:
- *         description: Non authentifié
- *       403:
- *         description: Rôle non autorisé (l'admin utilise /api/admin/stats)
- *       500:
- *         description: Erreur serveur
- */
+// GET /api/dashboard
+router.get("/", authenticate, async (req, res) => {
+  try {
+    const { id, role } = req.user;
 
-// Dashboard patient / praticien. L'admin a son propre endpoint : GET /api/admin/stats
-router.get(
-  "/",
-  authenticate,
-  requireRole("patient", "practitioner"),
-  async (req, res) => {
-    try {
-      const { id, role } = req.user;
-
-      // ----- Patient -----
-      if (role === "patient") {
-        const [appts, records, results, upcoming] = await Promise.all([
-          pool.query(
-            `SELECT COUNT(*)::int AS n FROM appointments
-             WHERE patient_id = $1 AND status IN ('pending','confirmed')`,
-            [id],
-          ),
-          pool.query(
-            `SELECT COUNT(*)::int AS n FROM medical_records WHERE patient_id = $1`,
-            [id],
-          ),
-          pool.query(
-            `SELECT COUNT(*)::int AS n FROM lab_results WHERE patient_id = $1`,
-            [id],
-          ),
-          // Le frontend lit "doctor_name" : on garde cet alias
-          pool.query(
-            `SELECT a.*, u.full_name AS doctor_name, u.specialty
-             FROM appointments a
-             JOIN users u ON a.practitioner_id = u.id
-             WHERE a.patient_id = $1
-               AND a.appointment_date >= CURRENT_DATE
-               AND a.status <> 'cancelled'
-             ORDER BY a.appointment_date, a.appointment_time
-             LIMIT 5`,
-            [id],
-          ),
-        ]);
-
-        return res.json({
-          role: "patient",
-          stats: {
-            upcoming_appointments: appts.rows[0].n,
-            medical_records: records.rows[0].n,
-            lab_results: results.rows[0].n,
-          },
-          upcoming: upcoming.rows,
-        });
-      }
-
-      // ----- Praticien -----
-      const [today, pending, patients, agenda] = await Promise.all([
+    // ==========================================
+    // DASHBOARD PATIENT
+    // ==========================================
+    if (role === "patient") {
+      const [appts, records, results, upcoming] = await Promise.all([
+        // Nombre de rendez-vous à venir
         pool.query(
-          `SELECT COUNT(*)::int AS n FROM appointments
-           WHERE practitioner_id = $1 AND appointment_date = CURRENT_DATE
-             AND status <> 'cancelled'`,
-          [id],
+          `SELECT COUNT(*)::int AS count
+           FROM appointments
+           WHERE patient_id = $1
+           AND status IN ('pending', 'confirmed')
+           AND appointment_date >= CURRENT_DATE`,
+          [id]
         ),
+
+        // Nombre de dossiers médicaux
         pool.query(
-          `SELECT COUNT(*)::int AS n FROM appointments
-           WHERE practitioner_id = $1 AND status = 'pending'`,
-          [id],
+          `SELECT COUNT(*)::int AS count
+           FROM medical_records
+           WHERE patient_id = $1`,
+          [id]
         ),
+
+        // Nombre de résultats d'analyses
         pool.query(
-          `SELECT COUNT(DISTINCT patient_id)::int AS n FROM appointments
-           WHERE practitioner_id = $1`,
-          [id],
+          `SELECT COUNT(*)::int AS count
+           FROM lab_results
+           WHERE patient_id = $1`,
+          [id]
         ),
-        // Agenda du jour : le frontend lit "today", "patient_name" et "clinique_ville"
+
+        // Prochains rendez-vous
         pool.query(
-          `SELECT a.id, a.appointment_date, a.appointment_time, a.reason, a.type, a.status,
-                  p.full_name AS patient_name,
-                  c.nom AS clinique_nom, c.ville AS clinique_ville
+          `SELECT
+              a.*,
+              u.full_name AS doctor_name,
+              u.specialty,
+              c.ville AS clinique_ville
            FROM appointments a
-           JOIN users p ON p.id = a.patient_id
+           JOIN users u ON a.practitioner_id = u.id
            LEFT JOIN cliniques c ON c.id = a.clinique_id
-           WHERE a.practitioner_id = $1
-             AND a.appointment_date = CURRENT_DATE
-             AND a.status <> 'cancelled'
-           ORDER BY a.appointment_time`,
-          [id],
+           WHERE a.patient_id = $1
+           AND a.appointment_date >= CURRENT_DATE
+           AND a.status <> 'cancelled'
+           ORDER BY a.appointment_date, a.appointment_time
+           LIMIT 5`,
+          [id]
         ),
       ]);
 
-      res.json({
-        role: "practitioner",
+      return res.json({
+        role: "patient",
+
         stats: {
-          today_appointments: today.rows[0].n,
-          pending_appointments: pending.rows[0].n,
-          total_patients: patients.rows[0].n,
+          upcoming_appointments: appts.rows[0].count,
+          medical_records: records.rows[0].count,
+          lab_results: results.rows[0].count,
         },
-        today: agenda.rows,
+
+        upcoming: upcoming.rows,
       });
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ error: "Erreur serveur" });
     }
-  },
-);
+
+    // ==========================================
+    // DASHBOARD PRACTITIONER
+    // ==========================================
+    if (role === "practitioner") {
+      const [todayCount, pending, patients, todayList] =
+        await Promise.all([
+          // Nombre de rendez-vous aujourd'hui
+          pool.query(
+            `SELECT COUNT(*)::int AS count
+             FROM appointments
+             WHERE practitioner_id = $1
+             AND appointment_date = CURRENT_DATE
+             AND status <> 'cancelled'`,
+            [id]
+          ),
+
+          // Nombre de rendez-vous en attente
+          pool.query(
+            `SELECT COUNT(*)::int AS count
+             FROM appointments
+             WHERE practitioner_id = $1
+             AND status = 'pending'`,
+            [id]
+          ),
+
+          // Nombre de patients suivis
+          pool.query(
+            `SELECT COUNT(DISTINCT patient_id)::int AS count
+             FROM appointments
+             WHERE practitioner_id = $1`,
+            [id]
+          ),
+
+          // Agenda du jour
+          pool.query(
+            `SELECT
+                a.id,
+                a.appointment_date,
+                a.appointment_time,
+                a.reason,
+                a.type,
+                a.status,
+                a.specialty,
+                u.full_name AS patient_name,
+                c.nom AS clinique_nom,
+                c.ville AS clinique_ville
+             FROM appointments a
+             JOIN users u ON u.id = a.patient_id
+             LEFT JOIN cliniques c ON c.id = a.clinique_id
+             WHERE a.practitioner_id = $1
+             AND a.appointment_date = CURRENT_DATE
+             AND a.status <> 'cancelled'
+             ORDER BY a.appointment_time`,
+            [id]
+          ),
+        ]);
+
+      return res.json({
+        role: "practitioner",
+
+        stats: {
+          today_appointments: todayCount.rows[0].count,
+          pending_appointments: pending.rows[0].count,
+          total_patients: patients.rows[0].count,
+        },
+
+        today: todayList.rows,
+      });
+    }
+
+    // ==========================================
+    // AUTRES RÔLES
+    // ==========================================
+    return res.status(403).json({
+      error: "Tableau de bord non disponible pour ce rôle",
+    });
+
+  } catch (err) {
+    console.error("Erreur Dashboard:", err);
+
+    return res.status(500).json({
+      error: "Erreur serveur",
+    });
+  }
+});
 
 export default router;

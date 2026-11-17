@@ -23,10 +23,14 @@ import DossiersMedicaux from './modules/practitioner/pages/DossiersMedicaux';
 import ComptesRendus from './modules/practitioner/pages/ComptesRendus';
 import PublierResultats from './modules/practitioner/pages/PublierResultats';
 
-// Pages admin
+// 3. Back-office administrateur (NOUVEAU)
+import AdminDashboard from './modules/admin/pages/Admin';
 import AdminUsers from './modules/admin/pages/AdminUsers';
-import AdminCliniques from './modules/admin/pages/AdminClinique';
+import AdminCliniques from './modules/admin/pages/AdminCliniques';
 import AdminAudit from './modules/admin/pages/AdminAudit';
+import AdminRendezVous from './modules/admin/pages/AdminRendezVous';
+import AdminStats from './modules/admin/pages/AdminStats';
+import AdminAppels from './modules/admin/pages/AdminAppels';
 
 // Protection : utilisateur connecté
 function PrivateRoute({ children }) {
@@ -55,11 +59,16 @@ function PrivateRoute({ children }) {
     return children;
 }
 
-// Protection : rôle requis (le backend contrôle aussi, ceci évite les pages vides)
+// Réserve une route à certains rôles (NOUVEAU)
 function RoleRoute({ roles, children }) {
     const { user } = useAuth();
-    if (!roles.includes(user?.role)) return <Navigate to="/app" replace />;
-    return children;
+    return roles.includes(user?.role) ? children : <Navigate to="/app" replace />;
+}
+
+// Chaque rôle a son propre tableau de bord sur /app (NOUVEAU)
+function DashboardRouter() {
+    const { user } = useAuth();
+    return user?.role === 'admin' ? <AdminDashboard /> : <Dashboard />;
 }
 
 export default function App() {
@@ -73,28 +82,26 @@ export default function App() {
 
             {/* Routes protégées */}
             <Route path="/app" element={<PrivateRoute><Layout /></PrivateRoute>}>
-                <Route index element={<Dashboard />} />
+                {/* On utilise DashboardRouter au lieu de Dashboard */}
+                <Route index element={<DashboardRouter />} />
 
-                {/* Patient et praticien */}
                 <Route path="appointments" element={<Appointments />} />
                 <Route path="records" element={<Records />} />
+                <Route path="results" element={<Results />} />
+                <Route path="disponibilites" element={<Disponibilites />} />  
+                <Route path="agenda" element={<Agenda />} />                    
+                <Route path="patients" element={<Patients />} />                
+                <Route path="dossiers/:id" element={<DossiersMedicaux />} />        
+                <Route path="comptes-rendus" element={<ComptesRendus />} />      
+                <Route path="publier-resultats" element={<PublierResultats />} /> 
 
-                {/* Patient */}
-                <Route path="book" element={<RoleRoute roles={['patient']}><BookAppointment /></RoleRoute>} />
-                <Route path="results" element={<RoleRoute roles={['patient']}><Results /></RoleRoute>} />
-
-                {/* Praticien */}
-                <Route path="disponibilites" element={<RoleRoute roles={['practitioner']}><Disponibilites /></RoleRoute>} />
-                <Route path="agenda" element={<RoleRoute roles={['practitioner']}><Agenda /></RoleRoute>} />
-                <Route path="patients" element={<RoleRoute roles={['practitioner']}><Patients /></RoleRoute>} />
-                <Route path="dossiers/:id" element={<RoleRoute roles={['practitioner']}><DossiersMedicaux /></RoleRoute>} />
-                <Route path="comptes-rendus" element={<RoleRoute roles={['practitioner']}><ComptesRendus /></RoleRoute>} />
-                <Route path="publier-resultats" element={<RoleRoute roles={['practitioner']}><PublierResultats /></RoleRoute>} />
-
-                {/* Admin */}
+                {/* Routes Admin (NOUVEAU) */}
                 <Route path="admin/users" element={<RoleRoute roles={['admin']}><AdminUsers /></RoleRoute>} />
                 <Route path="admin/cliniques" element={<RoleRoute roles={['admin']}><AdminCliniques /></RoleRoute>} />
                 <Route path="admin/audit" element={<RoleRoute roles={['admin']}><AdminAudit /></RoleRoute>} />
+                <Route path="admin/rendez-vous" element={<RoleRoute roles={['admin']}><AdminRendezVous /></RoleRoute>} />
+                <Route path="admin/statistiques" element={<RoleRoute roles={['admin']}><AdminStats /></RoleRoute>} />
+                <Route path="admin/appels" element={<RoleRoute roles={['admin']}><AdminAppels /></RoleRoute>} />
             </Route>
 
             {/* Pages inexistantes */}

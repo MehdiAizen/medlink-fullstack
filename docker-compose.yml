@@ -28,6 +28,17 @@ services:
     environment:
       - NODE_ENV=production
       - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USER=medlink
+      - DB_PASSWORD=medlink_secret
+      - DB_NAME=medlink
+      - JWT_SECRET=medlink_super_secret_jwt_2026
+      - ALLOW_LEGACY_AUTH=true
+      - KEYCLOAK_URL=http://keycloak:8080
+      - KEYCLOAK_PUBLIC_URL=http://localhost:8081
+      - KEYCLOAK_REALM=medlink
+      - KEYCLOAK_ADMIN_CLIENT_ID=medlink-backend
+      - KEYCLOAK_ADMIN_CLIENT_SECRET=dev-admin-secret-change-me
     depends_on:
       db:
         condition: service_healthy

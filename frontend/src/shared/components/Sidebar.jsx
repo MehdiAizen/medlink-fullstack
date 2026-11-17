@@ -4,142 +4,138 @@ import logo from '../assets/logo-medlink.jpg';
 
 // Navigation Patient
 const patientNav = [
-    { to: '/app', label: 'Tableau de bord', icon: '📊' },
-    { to: '/app/appointments', label: 'Mes rendez-vous', icon: '📅' },
-    { to: '/app/book', label: 'Prendre RDV', icon: '➕' },
-    { to: '/app/records', label: 'Dossier médical', icon: '📋' },
-    { to: '/app/results', label: 'Mes résultats', icon: '🧪' },
+  { to: '/app', label: 'Tableau de bord', icon: '📊', description: "Vue d'ensemble" },
+  { to: '/app/appointments', label: 'Mes rendez-vous', icon: '📅', description: 'Gérer mes RDV' },
+  { to: '/app/book', label: 'Prendre RDV', icon: '➕', description: 'Nouveau rendez-vous' },
+  { to: '/app/records', label: 'Dossier médical', icon: '📋', description: 'Mes documents' },
+  { to: '/app/results', label: 'Mes résultats', icon: '🧪', description: 'Analyses & bilans' },
 ];
 
 // Navigation Praticien
 const practitionerNav = [
-    { to: '/app', label: 'Tableau de bord', icon: '📊' },
-    { to: '/app/appointments', label: 'Agenda multi-sites', icon: '📅' },
-    { to: '/app/disponibilites', label: 'Mes disponibilités', icon: '⏰' },
-    { to: '/app/patients', label: 'Mes patients', icon: '🔍' },
-    { to: '/app/records', label: 'Dossiers médicaux', icon: '📁' },
-    { to: '/app/comptes-rendus', label: 'Comptes-rendus', icon: '📝' },
-    { to: '/app/publier-resultats', label: 'Publier résultats', icon: '💉' },
+  { to: '/app', label: 'Tableau de bord', icon: '📊', description: "Vue d'ensemble" },
+  { to: '/app/appointments', label: 'Agenda multi-sites', icon: '📅', description: 'Gérer les RDV' },
+  { to: '/app/disponibilites', label: 'Mes disponibilités', icon: '⏰', description: 'Créneaux & absences' },
+  { to: '/app/patients', label: 'Mes patients', icon: '🔍', description: 'Rechercher & consulter' },
+  { to: '/app/records', label: 'Dossiers médicaux', icon: '📁', description: 'Historique complet' },
+  { to: '/app/comptes-rendus', label: 'Comptes-rendus', icon: '📝', description: 'Rédiger & consulter' },
+  { to: '/app/publier-resultats', label: 'Publier résultats', icon: '💉', description: 'Analyses & examens' },
 ];
 
 // Navigation Administrateur
 const adminNav = [
-    { to: '/app', label: 'Tableau de bord', icon: '📊' },
-    { to: '/app/admin/users', label: 'Utilisateurs', icon: '👥' },
-    { to: '/app/admin/cliniques', label: 'Cliniques', icon: '🏥' },
-    { to: '/app/admin/audit', label: "Journal d'audit", icon: '🛡️' },
+  { to: '/app', label: 'Tableau de bord', icon: '📊', description: "Vue d'ensemble" },
+  { to: '/app/admin/users', label: 'Utilisateurs', icon: '👥', description: 'Gérer les utilisateurs' },
+  { to: '/app/admin/cliniques', label: 'Cliniques', icon: '🏥', description: 'Gérer les cliniques' },
+  { to: '/app/admin/audit', label: "Journal d'audit", icon: '🛡️', description: 'Consulter les actions' },
+    { to: '/app/admin/rendez-vous', label: 'Rendez-vous', icon: '📅', description: 'Réserver pour un patient' },
+    { to: '/app/admin/statistiques', label: 'Statistiques', icon: '📈', description: 'Synthèse et exports' },
+    { to: '/app/admin/appels', label: 'Suivi des appels', icon: '📞', description: 'Baisse des appels' },
 ];
 
-// Menus associés aux rôles
 const navByRole = {
-    patient: patientNav,
-    practitioner: practitionerNav,
-    admin: adminNav,
+  patient: patientNav,
+  practitioner: practitionerNav,
+  admin: adminNav,
 };
 
-// Libellés des rôles
 const roleLabel = {
-    patient: 'Patient',
-    practitioner: 'Praticien',
-    admin: 'Administrateur',
+  patient: 'Patient',
+  practitioner: 'Praticien',
+  admin: 'Administrateur',
 };
 
 export default function Sidebar() {
-    const { user, logout } = useAuth();
+  const { user, logout } = useAuth();
 
-    // Sélection du menu selon le rôle de l'utilisateur
-    const nav = navByRole[user?.role] || patientNav;
+  const nav = navByRole[user?.role] || patientNav;
 
-    // Déconnexion
-    const handleLogout = async () => {
-        try {
-            await logout();
-        } catch (error) {
-            console.error('Erreur lors de la déconnexion :', error);
-        }
+  const displayRole =
+    user?.role === 'practitioner'
+      ? user?.specialty || roleLabel.practitioner
+      : roleLabel[user?.role] || 'Patient';
+
+  // Déconnexion
+    const handleLogout = () => {
+        logout();
     };
+  return (
+    <aside className="fixed inset-y-0 left-0 z-30 flex w-72 flex-col border-r border-gray-200 bg-white shadow-sm">
+      
+      {/* Logo et titre */}
+      <div className="flex items-center gap-3 border-b border-gray-100 px-6 py-5">
+        <img
+          src={logo}
+          alt="MedLink Logo"
+          className="h-12 w-auto rounded-lg object-contain"
+        />
+        <div>
+          <h1 className="text-xl font-bold text-gray-900">MedLink</h1>
+          <p className="text-xs text-gray-500">Espace sécurisé</p>
+        </div>
+      </div>
 
-    return (
-        <aside className="fixed inset-y-0 left-0 z-30 flex w-72 flex-col border-r border-outline-variant bg-white">
+      {/* Navigation */}
+      <nav className="flex-1 space-y-1 overflow-y-auto px-4 py-6">
+        <p className="mb-3 px-4 text-xs font-semibold uppercase tracking-wider text-gray-400">
+          {user?.role === 'practitioner'
+            ? 'Menu praticien'
+            : user?.role === 'admin'
+              ? 'Menu administrateur'
+              : 'Menu principal'}
+        </p>
 
-            {/* Logo et titre */}
-            <div className="flex items-center gap-3 border-b border-outline-variant px-6 py-5">
-                <img
-                    src={logo}
-                    alt="MedLink Logo"
-                    className="h-12 w-auto object-contain"
-                />
+        {nav.map((item) => (
+          <NavLink
+            key={item.to}
+            to={item.to}
+            end={item.to === '/app'}
+            className={({ isActive }) =>
+              `group flex items-center gap-3 rounded-xl px-4 py-3 transition-all duration-200 ${
+                isActive
+                  ? 'border border-teal-100 bg-gradient-to-r from-teal-50 to-blue-50 text-teal-700 shadow-sm'
+                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+              }`
+            }
+          >
+            <span className="text-2xl transition-transform group-hover:scale-110">
+              {item.icon}
+            </span>
 
-                <div>
-                    <h1 className="font-display text-xl font-bold text-on-surface">
-                        MedLink
-                    </h1>
-                    <p className="text-xs text-on-variant">
-                        Espace sécurisé
-                    </p>
-                </div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-medium">{item.label}</p>
+              <p className="truncate text-xs text-gray-400">{item.description}</p>
+            </div>
+          </NavLink>
+        ))}
+      </nav>
+
+      {/* Profil + déconnexion */}
+      <div className="border-t border-gray-100 bg-gray-50 p-4">
+        <div className="mb-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-teal-500 to-blue-600 text-lg font-bold text-white shadow-md">
+              {user?.full_name?.charAt(0) || 'U'}
             </div>
 
-            {/* Navigation */}
-            <nav className="flex-1 space-y-1 overflow-y-auto px-4 py-6">
-                <p className="mb-3 px-4 text-xs font-semibold uppercase tracking-wider text-on-variant">
-                    Menu principal
-                </p>
-
-                {nav.map((item) => (
-                    <NavLink
-                        key={item.to}
-                        to={item.to}
-                        end={item.to === '/app'}
-                        className={({ isActive }) =>
-                            isActive
-                                ? 'nav-link-active'
-                                : 'nav-link-inactive'
-                        }
-                    >
-                        <span className="text-lg">{item.icon}</span>
-                        {item.label}
-                    </NavLink>
-                ))}
-            </nav>
-
-            {/* Profil utilisateur et Déconnexion */}
-            <div className="border-t border-outline-variant p-4">
-
-                {/* Profil */}
-                <div className="mb-4 rounded-xl bg-surface-low p-4">
-                    <div className="flex items-center gap-3">
-
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-white font-semibold">
-                            {user?.full_name?.charAt(0) || 'U'}
-                        </div>
-
-                        <div className="flex-1 min-w-0">
-                            <p className="truncate text-sm font-semibold text-on-surface">
-                                {user?.full_name}
-                            </p>
-
-                            <p className="truncate text-xs text-on-variant">
-                                {user?.role === 'practitioner'
-                                    ? user?.specialty || roleLabel.practitioner
-                                    : roleLabel[user?.role] || 'Patient'}
-                            </p>
-                        </div>
-
-                    </div>
-                </div>
-
-                {/* Bouton Déconnexion */}
-                <button
-                    type="button"
-                    onClick={handleLogout}
-                    className="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-outline-variant bg-white px-4 py-3 text-sm font-semibold text-on-surface transition hover:border-error hover:bg-error-container hover:text-error"
-                >
-                    <span>🚪</span>
-                    Déconnexion
-                </button>
-
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold text-gray-900">
+                {user?.full_name}
+              </p>
+              <p className="truncate text-xs text-gray-500">{displayRole}</p>
             </div>
-        </aside>
-    );
+          </div>
+        </div>
+
+        <button
+          onClick={handleLogout}
+          className="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-red-200 bg-white px-4 py-3 text-sm font-semibold text-red-600 transition hover:border-red-300 hover:bg-red-50"
+        >
+          <span>🚪</span>
+          Déconnexion
+        </button>
+      </div>
+      
+    </aside>
+  );
 }

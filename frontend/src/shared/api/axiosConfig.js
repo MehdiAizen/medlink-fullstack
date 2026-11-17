@@ -8,13 +8,26 @@ async function request(path, options = {}) {
     ...options.headers,
   };
 
-  // Rafraîchir le token si nécessaire
-  if (keycloak.authenticated) {
-    await keycloak.updateToken(30);
-    headers.Authorization = `Bearer ${keycloak.token}`;
+  // Refresh the token if it expires in less than 30 seconds
+  if (keycloak?.authenticated) {
+    try {
+      await keycloak.updateToken(30);
+      headers.Authorization = `Bearer ${keycloak.token}`;
+    } catch (error) {
+      console.error("Session expirée, déconnexion forcée...");
+      keycloak.logout({ redirectUri: window.location.origin + '/login' });
+      return Promise.reject(error);
+    }
   }
 
   const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
+
+  // Backend says unauthorized while we think we're logged in -> force logout
+  if (res.status === 401 && keycloak?.authenticated) {
+    keycloak.logout({ redirectUri: window.location.origin + '/login' });
+    throw new Error("Session expirée. Veuillez vous reconnecter.");
+  }
+
   const data = await res.json().catch(() => ({}));
 
   if (!res.ok) {
@@ -23,10 +36,32 @@ async function request(path, options = {}) {
     err.code = data.code;
     throw err;
   }
-  return data; // ← cette ligne doit rester, sinon /me renvoie undefined
+  return data; // must stay, otherwise /me returns undefined
 }
 
-// Routes publiques : pas de token. On garde les erreurs par champ (err.fields).
+// Download a file (e.g. CSV) with the same token as request()
+async function download(path, filename) {
+  const headers = {};
+  if (keycloak?.authenticated) {
+    await keycloak.updateToken(30);
+    headers.Authorization = `Bearer ${keycloak.token}`;
+  }
+  const res = await fetch(`${API_BASE}${path}`, { headers });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || `Erreur ${res.status}`);
+  }
+  const url = URL.createObjectURL(await res.blob());
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+// Public routes: no token. Keep per-field errors (err.fields).
 async function publicPost(path, payload) {
   const res = await fetch(`${API_BASE}${path}`, {
     method: "POST",
@@ -51,9 +86,9 @@ const qs = (params = {}) => {
 };
 const withBody = (method, body) => ({ method, body: JSON.stringify(body) });
 
-// Rôle lu dans le token Keycloak (realm_access.roles), pas dans un claim "role"
+// Role read from the Keycloak token (realm_access.roles)
 function currentRole() {
-  const roles = keycloak.tokenParsed?.realm_access?.roles || [];
+  const roles = keycloak?.tokenParsed?.realm_access?.roles || [];
   return ['admin', 'practitioner', 'patient'].find((r) => roles.includes(r)) || null;
 }
 
@@ -69,6 +104,7 @@ const auth = {
   register: (payload) => publicPost('/auth/register', payload),
   practitionerOptions: () => request('/auth/practitioner-options'),
   registerPractitioner: (payload) => publicPost('/auth/register-practitioner', payload),
+  requestPractitioner: (payload) => request('/auth/practitioner-requests', withBody('POST', payload)),
 };
 
 // --- Module PATIENT ---
@@ -145,17 +181,42 @@ const admin = {
       request(`/admin/cliniques/${id}/practitioners`, withBody('PUT', { practitioner_ids })),
   },
   audit: (params) => request(`/admin/audit${qs(params)}`),
+
+  // US-30: appointments booked on behalf of a patient
+  patients: (q) => request(`/admin/patients${qs({ q })}`),
+  bookingOptions: () => request('/admin/booking-options'),
+  appointments: {
+    list: (params) => request(`/admin/appointments${qs(params)}`),
+    create: (data) => request('/admin/appointments', withBody('POST', data)),
+    cancel: (id) => request(`/admin/appointments/${id}/cancel`, { method: 'PATCH' }),
+  },
+
+  // US-50: overview; US-32 / US-46: anonymized statistics
+  synthese: (params) => request(`/admin/synthese${qs(params)}`),
+  anonymizedStats: (params) => request(`/admin/stats/anonymized${qs(params)}`),
+  exportStats: (params) =>
+    download(
+      `/admin/stats/export${qs(params)}`,
+      `medlink-statistiques-anonymisees_${params.from}_${params.to}.csv`
+    ),
+
+  // US-51: tracking the drop in calls
+  appels: {
+    get: (params) => request(`/admin/appels${qs(params)}`),
+    saveWeek: (data) => request('/admin/appels/semaine', withBody('PUT', data)),
+    saveReference: (data) => request('/admin/appels/reference', withBody('PUT', data)),
+  },
 };
 
 export const api = {
   auth,
-  // raccourcis historiques
+  // historical shortcuts
   register: auth.register,
   patient,
   practitioner,
   admin,
 
-  // façades selon le rôle (utilisées par les pages d'Aya)
+  // role-based facades (used by Aya's pages)
   appointments: {
     list: byRole({ patient: patient.appointments.list, practitioner: practitioner.appointments.list }),
     create: byRole({ patient: patient.appointments.create }),
