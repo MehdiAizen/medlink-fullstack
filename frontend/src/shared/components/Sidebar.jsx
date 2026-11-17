@@ -56,14 +56,9 @@ export default function Sidebar() {
       : roleLabel[user?.role] || 'Patient';
 
   // Déconnexion
-  const handleLogout = async () => {
-    try {
-      await logout();
-    } catch (error) {
-      console.error('Erreur lors de la déconnexion :', error);
-    }
-  };
-
+    const handleLogout = () => {
+        logout();
+    };
   return (
     <aside className="fixed inset-y-0 left-0 z-30 flex w-72 flex-col border-r border-gray-200 bg-white shadow-sm">
       
