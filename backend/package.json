@@ -4,11 +4,11 @@
   "version": "1.0.0",
   "description": "MedLink API - Node.js + Express + PostgreSQL",
   "main": "src/index.js",
- "scripts": {
-  "dev": "node --watch src/index.js",
-  "start": "node src/index.js",
-  "seed": "node src/seed.js"
-  },
+  "scripts": {
+  "dev": "node --watch src/bootstrap.js ./index.js",
+  "start": "node src/bootstrap.js ./index.js",
+  "seed": "node src/bootstrap.js ./seed.js"
+},
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
