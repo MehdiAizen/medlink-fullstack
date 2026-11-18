@@ -1,49 +1,26 @@
 import crypto from 'crypto';
-import dotenv from 'dotenv';
+import { getSecret } from './secrets.js'; // ✅ Import de notre fonction sécurisée
 
-dotenv.config();
+// ✅ Lecture sécurisée depuis /run/secrets/
+const ENCRYPTION_KEY = getSecret('encryption_key');
 
-// La clé doit faire exactement 32 caractères (256 bits) pour AES-256
-// En production, cette clé viendra du Vault (US-45)
-const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'MedLink2026SecretKeyForAES256!!!';
-const IV_LENGTH = 16; // Pour l'algorithme AES, le vecteur d'initialisation doit faire 16 octets
+// Vérification que la clé fait 32 octets (256 bits) pour AES-256
+const KEY = crypto.createHash('sha256').update(String(ENCRYPTION_KEY)).digest('base64').substr(0, 32);
 
-/**
- * Chiffre une donnée sensible (US-43)
- * @param {string} text - La donnée en clair (ex: numéro de téléphone)
- * @returns {string} - La donnée chiffrée en base64 (iv:chiffre:tag)
- */
 export function encrypt(text) {
-    if (!text) return null;
-    const iv = crypto.randomBytes(IV_LENGTH);
-    const cipher = crypto.createCipheriv('aes-256-gcm', Buffer.from(ENCRYPTION_KEY), iv);
-
+    const iv = crypto.randomBytes(16);
+    const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(KEY), iv);
     let encrypted = cipher.update(text, 'utf8', 'hex');
     encrypted += cipher.final('hex');
-
-    // On retourne l'IV, le texte chiffré et le tag d'authentification, séparés par ':'
-    return iv.toString('hex') + ':' + encrypted + ':' + cipher.getAuthTag().toString('hex');
+    return iv.toString('hex') + ':' + encrypted;
 }
 
-/**
- * Déchiffre une donnée
- * @param {string} encryptedText - La donnée chiffrée (iv:chiffre:tag)
- * @returns {string} - La donnée en clair
- */
-export function decrypt(encryptedText) {
-    if (!encryptedText) return null;
-    const textParts = encryptedText.split(':');
-    if (textParts.length !== 3) return null; // Format invalide
-
+export function decrypt(text) {
+    const textParts = text.split(':');
     const iv = Buffer.from(textParts.shift(), 'hex');
-    const encrypted = textParts.shift();
-    const authTag = Buffer.from(textParts.shift(), 'hex');
-
-    const decipher = crypto.createDecipheriv('aes-256-gcm', Buffer.from(ENCRYPTION_KEY), iv);
-    decipher.setAuthTag(authTag);
-
-    let decrypted = decipher.update(encrypted, 'hex', 'utf8');
+    const encryptedText = Buffer.from(textParts.join(':'), 'hex');
+    const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(KEY), iv);
+    let decrypted = decipher.update(encryptedText, 'hex', 'utf8');
     decrypted += decipher.final('utf8');
-
     return decrypted;
 }
