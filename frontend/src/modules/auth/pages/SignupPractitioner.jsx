@@ -223,12 +223,21 @@ export default function SignupPractitioner() {
 
   return (
     <Shell panel={PANEL}>
-      <div className="mb-6 flex items-center gap-3 lg:hidden">
-        <span className="grid h-11 w-11 place-items-center overflow-hidden rounded-xl border border-slate-200 bg-white">
-          <img src={logo} alt="MedLink" className="h-9 w-9 object-contain" />
-        </span>
-        <span className="font-display text-2xl font-extrabold tracking-tight">MedLink</span>
-      </div>
+
+<Link
+  to="/"
+  aria-label="Retour à l'accueil MedLink"
+  className="mb-6 inline-flex items-center gap-3 text-inherit no-underline lg:hidden"
+>
+  <span className="grid h-11 w-11 place-items-center overflow-hidden rounded-xl border border-slate-200 bg-white">
+    <img src={logo} alt="" className="h-9 w-9 object-contain" />
+  </span>
+
+  <span className="font-display text-2xl font-extrabold tracking-tight">
+    MedLink
+  </span>
+</Link>
+
 
       <h1 className="text-3xl font-extrabold tracking-tight sm:text-[2rem]">Créer un compte praticien</h1>
       <p className="mb-7 mt-2 text-slate-500">

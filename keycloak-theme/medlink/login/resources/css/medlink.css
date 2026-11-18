@@ -79,7 +79,8 @@ a:hover { color: var(--ml-teal-dark); }
 .ml-side > * { position: relative; z-index: 1; }
 
 .ml-side__top { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
-.ml-side__brand { display: flex; align-items: center; gap: 16px; }
+.ml-side__brand { display: flex; align-items: center; gap: 16px; color: inherit; text-decoration: none; cursor: pointer; transition: opacity .15s ease; }
+.ml-side__brand:hover, .ml-side__brand:focus-visible { opacity: .88; text-decoration: none; color: inherit; }
 .ml-side__logo { display: grid; place-items: center; width: 55px; height: 55px; border-radius: 14px; background: #fff; overflow: hidden; box-shadow: 0 4px 14px rgba(0, 0, 0, .12); }
 .ml-side__logo img { width: 46px; height: 46px; object-fit: contain; }
 .ml-side__name { font-size: 1.9rem; font-weight: 800; letter-spacing: -.01em; }
