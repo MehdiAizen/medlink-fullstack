@@ -184,6 +184,16 @@ async function seed() {
           encrypt('+216 71 345 678')  // ✅ Chiffrement du médecin 2
         ]
     );
+      await pool.query(`
+      UPDATE users u SET keycloak_id = v.kid::uuid
+      FROM (VALUES
+        ('admin@medlink.tn',        '11111111-1111-4111-8111-000000000001'),
+        ('patient@medlink.tn',      '11111111-1111-4111-8111-000000000002'),
+        ('sara.patient@medlink.tn', '11111111-1111-4111-8111-000000000003'),
+        ('doctor@medlink.tn',       '11111111-1111-4111-8111-000000000004'),
+        ('pediatre@medlink.tn',     '11111111-1111-4111-8111-000000000005')
+      ) AS v(email, kid) WHERE u.email = v.email
+    `);
 
     const admin = users.rows[0].id;
     const patient1 = users.rows[1].id; // Amine
@@ -250,7 +260,8 @@ async function seed() {
     );
 
     console.log('✅ Seed terminé avec succès !\n');
-    console.log('🔑 Comptes de démo (Mot de passe : password123) :');
+     //password123 change au Medlink@2026!
+    console.log('🔑 Comptes de démo (Mot de passe :  Medlink@2026!) :');
     console.log('  🔒 Admin       : admin@medlink.tn');
     console.log('  👤 Patient     : patient@medlink.tn      (Amine)');
     console.log('  👤 Patient     : sara.patient@medlink.tn (Sara)');
