@@ -158,10 +158,10 @@
   <#-- MedLink : panneau de gauche -->
   <aside class="ml-side">
     <div class="ml-side__top">
-      <div class="ml-side__brand">
+      <a class="ml-side__brand" href="${properties.homeUrl!'http://localhost:3000/'}" aria-label="Retour à l'accueil MedLink">
         <span class="ml-side__logo"><img src="${url.resourcesPath}/img/logo-medlink.jpg" alt=""></span>
         <span class="ml-side__name">MedLink<i class="ml-dot"></i></span>
-      </div>
+      </a>
       <span class="ml-side__badge"><@ico paths='<path d="M12 3 5 6v6c0 4.5 3 7.5 7 9 4-1.5 7-4.5 7-9V6z"/><path d="m9 12 2 2 4-4"/>' size=15 /> ${msg("sideBadge")}</span>
     </div>
     <div class="ml-side__body">

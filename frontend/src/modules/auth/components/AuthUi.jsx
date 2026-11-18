@@ -1,4 +1,6 @@
+
 import logo from '../../../shared/assets/logo-medlink.jpg';
+import { Link } from 'react-router-dom';
 
 // Éléments d'interface communs aux formulaires d'inscription (patient et praticien).
 
@@ -7,8 +9,18 @@ export const TEAL = 'bg-[#028f82] hover:bg-[#027a6f]';
 // --- Petits composants d'interface (apparence uniquement) -------------------
 export function Icon({ children, size = 20, className = '' }) {
   return (
-    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="2"
-         strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className={className}>
+    <svg
+      viewBox="0 0 24 24"
+      width={size}
+      height={size}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      className={className}
+    >
       {children}
     </svg>
   );
@@ -31,7 +43,12 @@ export const ICONS = {
   badge: <><rect x="3" y="5" width="18" height="14" rx="2" /><circle cx="9" cy="11" r="2" /><path d="M15 9h3M15 13h3M6.5 16.5c.6-1.6 4.4-1.6 5 0" /></>,
   chevron: <path d="m6 9 6 6 6-6" />,
 };
-export const Ic = ({ name, size, className }) => <Icon size={size} className={className}>{ICONS[name]}</Icon>;
+
+export const Ic = ({ name, size, className }) => (
+  <Icon size={size} className={className}>
+    {ICONS[name]}
+  </Icon>
+);
 
 // Disposition commune : panneau turquoise à gauche (comme la page de connexion), contenu à droite.
 const PATIENT_PANEL = {
@@ -50,21 +67,31 @@ export function Shell({ children, panel = PATIENT_PANEL }) {
     <div className="min-h-screen bg-white lg:grid lg:grid-cols-[11fr_9fr]">
       <aside className="relative hidden flex-col justify-between overflow-hidden bg-gradient-to-br from-[#0fa39a] via-[#00877a] to-[#02574f] px-12 py-14 text-white lg:sticky lg:top-0 lg:flex lg:h-screen xl:px-20">
         <div className="pointer-events-none absolute -bottom-56 -right-44 h-[520px] w-[520px] rounded-full border-[40px] border-white/[0.06]" />
-        <div className="relative flex items-center gap-4">
+
+        <Link
+          to="/"
+          aria-label="Retour à l'accueil MedLink"
+          className="relative flex items-center gap-4 text-white no-underline transition-opacity hover:opacity-90"
+        >
           <span className="grid h-14 w-14 place-items-center overflow-hidden rounded-2xl bg-white shadow-lg">
             <img src={logo} alt="" className="h-11 w-11 object-contain" />
           </span>
+
           <span className="font-display text-3xl font-extrabold tracking-tight">
             MedLink<i className="ml-1.5 inline-block h-2.5 w-2.5 rounded-full bg-emerald-200 align-baseline" />
           </span>
-        </div>
+        </Link>
 
         <div className="relative">
           <h2 className="mb-5 font-display text-5xl font-extrabold leading-[1.1] tracking-tight !text-white xl:text-6xl">
             {panel.title}<br />
             <span className="text-emerald-200">{panel.highlight}</span>
           </h2>
-          <p className="mb-8 max-w-xl text-lg leading-relaxed text-white/90">{panel.text}</p>
+
+          <p className="mb-8 max-w-xl text-lg leading-relaxed text-white/90">
+            {panel.text}
+          </p>
+
           <ul className="grid gap-4">
             {panel.features.map(([icon, text]) => (
               <li key={text} className="flex items-center gap-4 text-base text-white/95">
@@ -92,7 +119,9 @@ export function Shell({ children, panel = PATIENT_PANEL }) {
 export function Field({ id, label, error, children }) {
   return (
     <div>
-      <label htmlFor={id} className="mb-2 block text-xs font-bold uppercase tracking-wider text-[#0b1b3a]">{label}</label>
+      <label htmlFor={id} className="mb-2 block text-xs font-bold uppercase tracking-wider text-[#0b1b3a]">
+        {label}
+      </label>
       {children}
       {error && (
         <p id={`${id}-error`} role="alert" className="mt-1.5 text-xs font-medium text-error">
@@ -111,8 +140,11 @@ export function InputShell({ icon, right, passive = false, children }) {
         <Ic name={icon} size={19} />
       </span>
       {children}
-      {right && <span className={`absolute inset-y-0 right-3 flex items-center ${passive ? 'pointer-events-none' : ''}`}>{right}</span>}
+      {right && (
+        <span className={`absolute inset-y-0 right-3 flex items-center ${passive ? 'pointer-events-none' : ''}`}>
+          {right}
+        </span>
+      )}
     </div>
   );
 }
-
