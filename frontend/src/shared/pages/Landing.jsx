@@ -1,6 +1,11 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import logo from '../assets/logo-medlink.jpg';
 export default function Landing() {
+    const { user, login } = useAuth();
+    const navigate = useNavigate();
+    // Déjà connecté : direct dans l'app. Sinon : directement la page Keycloak.
+    const goToApp = () => (user ? navigate('/app') : login().catch(console.error));
     return (
         <div className="min-h-screen bg-white">
             {/* Navigation */}
@@ -21,8 +26,8 @@ export default function Landing() {
                         </div>
 
                         <div className="flex items-center gap-3">
-                            <Link to="/login" className="btn-secondary hidden sm:inline-flex">Se connecter</Link>
-                            <Link to="/login" className="btn-primary">Prendre RDV</Link>
+                            <button type="button" onClick={goToApp} className="btn-secondary hidden sm:inline-flex">Se connecter</button>
+                            <Link to="/signup" className="btn-primary">Créer un compte</Link>
                         </div>
                     </div>
                 </div>
@@ -41,7 +46,7 @@ export default function Landing() {
                                 Accédez à votre espace patient ou praticien sécurisé. Dossiers médicaux, rendez-vous et résultats d'analyses en un seul endroit.
                             </p>
                             <div className="flex flex-col sm:flex-row gap-4">
-                                <Link to="/login" className="btn-primary text-lg px-8 py-4">Réserver un rendez-vous →</Link>
+                                <button type="button" onClick={goToApp} className="btn-primary text-lg px-8 py-4">Réserver un rendez-vous →</button>
                                 <a href="#services" className="btn-outline text-lg px-8 py-4">Découvrir nos services</a>
                             </div>
                             <div className="grid grid-cols-3 gap-6 mt-12 pt-12 border-t border-outline-variant">
@@ -232,9 +237,9 @@ export default function Landing() {
                         Réservez votre rendez-vous en ligne dès maintenant ou contactez-nous
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                        <Link to="/login" className="bg-white text-primary px-8 py-4 rounded-lg font-semibold text-lg hover:bg-surface-low transition">
+                        <button type="button" onClick={goToApp} className="bg-white text-primary px-8 py-4 rounded-lg font-semibold text-lg hover:bg-surface-low transition">
                             Prendre rendez-vous
-                        </Link>
+                        </button>
                         <a href="tel:+21671123456" className="border-2 border-white text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-white/10 transition">
                             Nous appeler
                         </a>
@@ -263,7 +268,7 @@ export default function Landing() {
                                 <li><a href="#about" className="hover:text-primary transition">À propos</a></li>
                                 <li><a href="#services" className="hover:text-primary transition">Nos services</a></li>
                                 <li><a href="#clinics" className="hover:text-primary transition">Nos cliniques</a></li>
-                                <li><Link to="/login" className="hover:text-primary transition">Espace patient</Link></li>
+                                <li><button type="button" onClick={goToApp} className="hover:text-primary transition">Espace patient</button></li>
                             </ul>
                         </div>
 

@@ -59,7 +59,6 @@ export default function Appointments() {
   const [list, setList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-
   // Filtres
   const [clinicFilter, setClinicFilter] = useState('all');
   const [dateFilter, setDateFilter] = useState('all');
@@ -598,6 +597,37 @@ export default function Appointments() {
                               </>
                             )}
                         </div>
+                      </div>
+
+                      {/* Statut et Actions */}
+                      <div className="flex items-center gap-3 lg:shrink-0">
+                        {statusBadge(appt.status)}
+                        
+                        {isPractitioner && appt.status === 'pending' && (
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => updateStatus(appt.id, 'confirmed')}
+                              className="px-3 py-1.5 bg-emerald-600 text-white text-xs font-medium rounded-lg hover:bg-emerald-700 transition-colors"
+                            >
+                              ✓ Confirmer
+                            </button>
+                            <button
+                              onClick={() => updateStatus(appt.id, 'cancelled')}
+                              className="px-3 py-1.5 bg-red-50 text-red-600 text-xs font-medium rounded-lg hover:bg-red-100 transition-colors border border-red-200"
+                            >
+                              ✕ Annuler
+                            </button>
+                          </div>
+                        )}
+                        
+                        {isPractitioner && appt.status === 'confirmed' && (
+                          <button
+                            onClick={() => updateStatus(appt.id, 'completed')}
+                            className="px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                          >
+                            ✓ Terminer
+                          </button>
+                        )}
                       </div>
                     </div>
                   ))}

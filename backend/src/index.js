@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import helmet from 'helmet'; // ✅ US-61
+//us-61 import helmet from 'helmet';
 import swaggerUi from "swagger-ui-express";
 import swaggerSpec from "./config/swagger.js";
 
@@ -31,32 +31,43 @@ app.use(enforceHTTPS);     // US-44 : Forcer HTTPS
 // =================================================================
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
+
+// Documentation Swagger
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
+// Health check
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok", service: "MedLink API", version: "1.0.0" });
 });
+// 1. Faire confiance au premier proxy (Nginx/Docker) pour lire les vrais en-têtes
+app.set('trust proxy', 1);
 
-// =================================================================
-// 🚀 ROUTES
-// =================================================================
+// 2. En-têtes de sécurité (US-61)
+//us-61 app.use(helmet());
+
+// 3. FORCER HTTPS (US-44) - DOIT ÊTRE AVANT authenticate !
+app.use(enforceHTTPS);
+// Montage des modules (Le cœur du monolithe modulaire)
 app.use("/api/auth", authRoutes);
 app.use("/api/patient", patientRoutes);
 app.use("/api/practitioner", practitionerRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+// Gestionnaire 404
+app.use((req, res) => {
+  res.status(404).json({ error: "Route non trouvée" });
+});
 
-app.use((req, res) => res.status(404).json({ error: "Route non trouvée" }));
-
+// Gestionnaire d'erreurs global
 app.use((err, req, res, next) => {
-  console.error("❌ Erreur serveur:", err.stack);
+  console.error(err.stack);
   res.status(500).json({ error: "Erreur interne du serveur" });
 });
 
-// =================================================================
-// ▶️ DÉMARRAGE
-// =================================================================
+//Démarrage du cron de rappel
 startReminderWorker();
+
+// Démarrage du serveur
 app.listen(PORT, () => {
   console.log(`🚀 MedLink API running on http://localhost:${PORT}`);
 });

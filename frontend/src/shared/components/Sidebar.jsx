@@ -1,7 +1,8 @@
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import logo from '../assets/logo-medlink.jpg';
 
+// Navigation Patient
 const patientNav = [
   { to: '/app', label: 'Tableau de bord', icon: '📊', description: "Vue d'ensemble" },
   { to: '/app/appointments', label: 'Mes rendez-vous', icon: '📅', description: 'Gérer mes RDV' },
@@ -10,6 +11,7 @@ const patientNav = [
   { to: '/app/results', label: 'Mes résultats', icon: '🧪', description: 'Analyses & bilans' },
 ];
 
+// Navigation Praticien
 const practitionerNav = [
   { to: '/app', label: 'Tableau de bord', icon: '📊', description: "Vue d'ensemble" },
   { to: '/app/appointments', label: 'Agenda multi-sites', icon: '📅', description: 'Gérer les RDV' },
@@ -20,11 +22,15 @@ const practitionerNav = [
   { to: '/app/publier-resultats', label: 'Publier résultats', icon: '💉', description: 'Analyses & examens' },
 ];
 
+// Navigation Administrateur
 const adminNav = [
   { to: '/app', label: 'Tableau de bord', icon: '📊', description: "Vue d'ensemble" },
   { to: '/app/admin/users', label: 'Utilisateurs', icon: '👥', description: 'Gérer les utilisateurs' },
   { to: '/app/admin/cliniques', label: 'Cliniques', icon: '🏥', description: 'Gérer les cliniques' },
   { to: '/app/admin/audit', label: "Journal d'audit", icon: '🛡️', description: 'Consulter les actions' },
+    { to: '/app/admin/rendez-vous', label: 'Rendez-vous', icon: '📅', description: 'Réserver pour un patient' },
+    { to: '/app/admin/statistiques', label: 'Statistiques', icon: '📈', description: 'Synthèse et exports' },
+    { to: '/app/admin/appels', label: 'Suivi des appels', icon: '📞', description: 'Baisse des appels' },
 ];
 
 const navByRole = {
@@ -41,7 +47,6 @@ const roleLabel = {
 
 export default function Sidebar() {
   const { user, logout } = useAuth();
-  const navigate = useNavigate();
 
   const nav = navByRole[user?.role] || patientNav;
 
@@ -50,14 +55,13 @@ export default function Sidebar() {
       ? user?.specialty || roleLabel.practitioner
       : roleLabel[user?.role] || 'Patient';
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
-
+  // Déconnexion
+    const handleLogout = () => {
+        logout();
+    };
   return (
     <aside className="fixed inset-y-0 left-0 z-30 flex w-72 flex-col border-r border-gray-200 bg-white shadow-sm">
-
+      
       {/* Logo et titre */}
       <div className="flex items-center gap-3 border-b border-gray-100 px-6 py-5">
         <img
@@ -65,7 +69,6 @@ export default function Sidebar() {
           alt="MedLink Logo"
           className="h-12 w-auto rounded-lg object-contain"
         />
-
         <div>
           <h1 className="text-xl font-bold text-gray-900">MedLink</h1>
           <p className="text-xs text-gray-500">Espace sécurisé</p>
@@ -100,13 +103,8 @@ export default function Sidebar() {
             </span>
 
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium">
-                {item.label}
-              </p>
-
-              <p className="truncate text-xs text-gray-400">
-                {item.description}
-              </p>
+              <p className="truncate text-sm font-medium">{item.label}</p>
+              <p className="truncate text-xs text-gray-400">{item.description}</p>
             </div>
           </NavLink>
         ))}
@@ -114,10 +112,8 @@ export default function Sidebar() {
 
       {/* Profil + déconnexion */}
       <div className="border-t border-gray-100 bg-gray-50 p-4">
-
         <div className="mb-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
           <div className="flex items-center gap-3">
-
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-teal-500 to-blue-600 text-lg font-bold text-white shadow-md">
               {user?.full_name?.charAt(0) || 'U'}
             </div>
@@ -126,12 +122,8 @@ export default function Sidebar() {
               <p className="truncate text-sm font-semibold text-gray-900">
                 {user?.full_name}
               </p>
-
-              <p className="truncate text-xs text-gray-500">
-                {displayRole}
-              </p>
+              <p className="truncate text-xs text-gray-500">{displayRole}</p>
             </div>
-
           </div>
         </div>
 
@@ -142,8 +134,8 @@ export default function Sidebar() {
           <span>🚪</span>
           Déconnexion
         </button>
-
       </div>
+      
     </aside>
   );
 }
