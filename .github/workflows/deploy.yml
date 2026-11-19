@@ -1,0 +1,51 @@
+name: MedLink CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '22.x'
+
+      # --- BACKEND ---
+      - name: Install Backend Dependencies
+        working-directory: ./backend
+        run: npm ci
+
+      # --- FRONTEND ---
+      - name: Install Frontend Dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Build Frontend (Vite)
+        working-directory: ./frontend
+        run: npm run build
+
+      # --- PRÉPARATION DU DOSSIER DE DÉPLOIEMENT ---
+      - name: Prepare Deployment Package
+        run: |
+          mkdir -p deploy-package
+          # Copier tout le backend
+          cp -r ./backend/* ./deploy-package/
+          # Copier le frontend buildé dans le dossier public du backend
+          mkdir -p ./deploy-package/public
+          cp -r ./frontend/dist/* ./deploy-package/public/
+
+      # --- DÉPLOIEMENT SUR AZURE ---
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: 'MedLink'
+          slot-name: 'production'
+          publish-profile: ${{ secrets.AZURE_PUBLISH_PROFILE }}
+          package: './deploy-package'
