@@ -1,53 +1,170 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useState,
+  useEffect,
+  useRef,
+} from 'react';
+
 import { api } from '../api/axiosConfig';
+import keycloak from '../keycloak.js';
+import { useIdleLogout } from '../hooks/useIdleLogout.js';
 
 const AuthContext = createContext(null);
+
+// keycloak.init() ne peut être appelé qu'une seule fois par instance.
+// En développement, React.StrictMode exécute les effets deux fois :
+// on partage donc la même promesse d'initialisation entre les deux exécutions.
+let keycloakInitPromise = null;
+
+function initKeycloakOnce() {
+  if (!keycloakInitPromise) {
+    keycloakInitPromise = keycloak.init({
+      onLoad: 'check-sso',
+      pkceMethod: 'S256',
+      checkLoginIframe: false,
+      silentCheckSsoRedirectUri: window.location.origin + '/silent-check-sso.html',
+    });
+  }
+  return keycloakInitPromise;
+}
+
+const MFA_RETRY_KEY = 'medlink-mfa-retry';
+
+const readSession = (key) => {
+  try { return sessionStorage.getItem(key); } catch { return null; }
+};
+const writeSession = (key, value) => {
+  try { sessionStorage.setItem(key, value); } catch { /* ignoré */ }
+};
+const clearSession = (key) => {
+  try { sessionStorage.removeItem(key); } catch { /* ignoré */ }
+};
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [authError, setAuthError] = useState(null);
+  const logoutInProgress = useRef(false);
 
-  // Vérifier au chargement si un token est déjà présent
   useEffect(() => {
-    const token = localStorage.getItem('medlink_token');
-    if (token) {
-      api.auth.me()
-          .then(setUser)
-          .catch(() => {
-            localStorage.removeItem('medlink_token');
-            setUser(null);
-          })
-          .finally(() => setLoading(false));
-    } else {
-      setLoading(false);
+    let mounted = true;
+
+    const initializeAuth = async () => {
+      try {
+        const authenticated = await initKeycloakOnce();
+
+        if (authenticated) {
+          clearSession('medlink-login-attempt');
+
+          // Rafraîchit le token s'il expire pendant la navigation
+          keycloak.onTokenExpired = () => {
+            keycloak.updateToken(30).catch(() => {
+              console.warn('Session expirée, déconnexion...');
+              if (mounted) setUser(null);
+            });
+          };
+
+          const profile = await api.auth.me();
+          if (!profile || !profile.role) {
+            throw new Error("Profil utilisateur illisible (réponse vide de l'API)");
+          }
+
+          clearSession(MFA_RETRY_KEY);
+          if (mounted) {
+            setUser(profile);
+            setAuthError(null);
+          }
+        }
+      } catch (error) {
+        console.error('[auth] ÉCHEC :', error.status, error.code, error.message);
+
+        // MFA (US-17, US-34) : TOTP non configuré -> on ferme la session SSO une seule fois,
+        // Keycloak demandera la configuration à la prochaine connexion.
+        // Au 2e échec on affiche l'erreur : jamais de boucle.
+        if (error.code === 'MFA_REQUIRED' && readSession(MFA_RETRY_KEY) !== '1') {
+          writeSession(MFA_RETRY_KEY, '1');
+          clearSession('medlink-login-attempt');
+          await keycloak
+            .logout({ redirectUri: window.location.origin + '/login' })
+            .catch(() => {});
+          return; // la page quitte l'application : on ne touche plus à l'état
+        }
+
+        if (mounted) {
+          setUser(null);
+          setAuthError(error.message || 'Erreur de connexion');
+        }
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+
+    initializeAuth();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const login = async () => {
+    await keycloak.login({
+      redirectUri: window.location.origin + '/app',
+    });
+  };
+
+  // useCallback : une référence stable évite de réinitialiser le minuteur d'inactivité à chaque rendu.
+  const logout = useCallback(async () => {
+    if (logoutInProgress.current) return;
+    logoutInProgress.current = true;
+
+    // Évite que Login.jsx relance une connexion après le retour de Keycloak
+    clearSession('medlink-login-attempt');
+
+    try {
+      // Pas de setUser(null) ici : la page quitte l'application pour Keycloak,
+      // puis revient sur /login une fois la session SSO fermée.
+      await keycloak.logout({
+        redirectUri: window.location.origin + '/login',
+      });
+    } catch (error) {
+      logoutInProgress.current = false;
+      throw error;
     }
   }, []);
 
-  // Fonction de connexion
-  const login = async (email, password) => {
-    const data = await api.auth.login(email, password);
-    localStorage.setItem('medlink_token', data.token);
-    setUser(data.user);
-    return data;
-  };
+  // US-40 : déconnexion après 15 min d'inactivité.
+  // Le hook est appelé ici, au premier niveau du composant, et jamais dans logout().
+  const onIdle = useCallback(() => {
+    logout().catch(() => {});
+  }, [logout]);
 
-  // Fonction de déconnexion
-  const logout = () => {
-    localStorage.removeItem('medlink_token');
-    setUser(null);
-  };
+  useIdleLogout(!!user, onIdle);
 
   return (
-      <AuthContext.Provider value={{ user, login, logout, loading }}>
-        {children}
-      </AuthContext.Provider>
+    <AuthContext.Provider
+      value={{
+        user,
+        login,
+        logout,
+        loading,
+        authError,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
   );
 }
 
 export function useAuth() {
   const context = useContext(AuthContext);
+
   if (!context) {
-    throw new Error('useAuth doit être utilisé à l\'intérieur d\'un AuthProvider');
+    throw new Error(
+      'useAuth doit être utilisé à l’intérieur d’un AuthProvider'
+    );
   }
+
   return context;
 }

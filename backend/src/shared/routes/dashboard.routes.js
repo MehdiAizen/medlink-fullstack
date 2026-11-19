@@ -1,125 +1,163 @@
+
 import { Router } from "express";
 import pool from "../utils/db.js";
-import { authenticate, requireRole } from "../middleware/auth.js";
+import { authenticate } from "../middleware/auth.js";
 
 const router = Router();
 
-/**
- * @openapi
- * /api/dashboard:
- *   get:
- *     summary: Récupère les statistiques du tableau de bord (adapté au rôle)
- *     description: Renvoie des données différentes si l'utilisateur est un patient ou un médecin.
- *     tags: [Dashboard]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Succès (le schéma de réponse dépend du rôle de l'utilisateur connecté)
- *         content:
- *           application/json:
- *             examples:
- *               patient:
- *                 summary: Réponse pour un patient
- *                 value:
- *                   role: patient
- *                   stats:
- *                     upcoming_appointments: 2
- *                     medical_records: 1
- *                     lab_results: 3
- *                   upcoming: []
- *               doctor:
- *                 summary: Réponse pour un médecin
- *                 value:
- *                   role: doctor
- *                   stats:
- *                     today_appointments: 5
- *                     pending_appointments: 1
- *                     total_patients: 42
- *       401:
- *         description: Non authentifié
- *       500:
- *         description: Erreur serveur
- */
+// GET /api/dashboard
+router.get("/", authenticate, async (req, res) => {
+  try {
+    const { id, role } = req.user;
 
-// Dashboard patient / praticien. L'admin a son propre endpoint : GET /api/admin/stats
-router.get(
-  "/",
-  authenticate,
-  requireRole("patient", "practitioner"),
-  async (req, res) => {
-    try {
-      if (req.user.role === "patient") {
-        const [appts, records, results] = await Promise.all([
-          pool.query(
-            `SELECT COUNT(*)::int AS n FROM appointments WHERE patient_id = $1 AND status IN ('pending','confirmed')`,
-            [req.user.id],
-          ),
-          pool.query(
-            `SELECT COUNT(*)::int AS n FROM medical_records WHERE patient_id = $1`,
-            [req.user.id],
-          ),
-          pool.query(
-            `SELECT COUNT(*)::int AS n FROM lab_results WHERE patient_id = $1`,
-            [req.user.id],
-          ),
-        ]);
+    // ==========================================
+    // DASHBOARD PATIENT
+    // ==========================================
+    if (role === "patient") {
+      const [appts, records, results, upcoming] = await Promise.all([
+        // Nombre de rendez-vous à venir
+        pool.query(
+          `SELECT COUNT(*)::int AS count
+           FROM appointments
+           WHERE patient_id = $1
+           AND status IN ('pending', 'confirmed')
+           AND appointment_date >= CURRENT_DATE`,
+          [id]
+        ),
 
-        const upcoming = await pool.query(
-          `SELECT a.*, u.full_name AS doctor_name, u.specialty
-                 FROM appointments a JOIN users u ON a.practitioner_id = u.id
-                 WHERE a.patient_id = $1 AND a.appointment_date >= CURRENT_DATE
-                 ORDER BY a.appointment_date, a.appointment_time LIMIT 5`,
-          [req.user.id],
-        );
-        return res.json({
-          role: "patient",
-          stats: {
-            upcoming_appointments: appts.rows[0].n,
-            medical_records: records.rows[0].n,
-            lab_results: results.rows[0].n,
-          },
-          upcoming: upcoming.rows,
-        });
-      }
+        // Nombre de dossiers médicaux
+        pool.query(
+          `SELECT COUNT(*)::int AS count
+           FROM medical_records
+           WHERE patient_id = $1`,
+          [id]
+        ),
 
-      // Dashboard praticien
-      const [today, pending, patients, agenda] = await Promise.all([
+        // Nombre de résultats d'analyses
         pool.query(
-          `SELECT COUNT(*)::int AS n FROM appointments WHERE practitioner_id = $1 AND appointment_date = CURRENT_DATE`,
-          [req.user.id],
+          `SELECT COUNT(*)::int AS count
+           FROM lab_results
+           WHERE patient_id = $1`,
+          [id]
         ),
+
+        // Prochains rendez-vous
         pool.query(
-          `SELECT COUNT(*)::int AS n FROM appointments WHERE practitioner_id = $1 AND status = 'pending'`,
-          [req.user.id],
-        ),
-        pool.query(
-          `SELECT COUNT(DISTINCT patient_id)::int AS n FROM appointments WHERE practitioner_id = $1`,
-          [req.user.id],
-        ),
-        pool.query(
-          `SELECT a.*, p.full_name AS patient_name
-                 FROM appointments a JOIN users p ON a.patient_id = p.id
-                 WHERE a.practitioner_id = $1 AND a.appointment_date = CURRENT_DATE
-                 ORDER BY a.appointment_time`,
-          [req.user.id],
+          `SELECT
+              a.*,
+              u.full_name AS doctor_name,
+              u.specialty,
+              c.ville AS clinique_ville
+           FROM appointments a
+           JOIN users u ON a.practitioner_id = u.id
+           LEFT JOIN cliniques c ON c.id = a.clinique_id
+           WHERE a.patient_id = $1
+           AND a.appointment_date >= CURRENT_DATE
+           AND a.status <> 'cancelled'
+           ORDER BY a.appointment_date, a.appointment_time
+           LIMIT 5`,
+          [id]
         ),
       ]);
 
-      res.json({
-        role: "practitioner",
+      return res.json({
+        role: "patient",
+
         stats: {
-          today_appointments: today.rows[0].n,
-          pending_appointments: pending.rows[0].n,
-          total_patients: patients.rows[0].n,
+          upcoming_appointments: appts.rows[0].count,
+          medical_records: records.rows[0].count,
+          lab_results: results.rows[0].count,
         },
-        today: agenda.rows,
+
+        upcoming: upcoming.rows,
       });
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ error: "Erreur serveur" });
     }
-  },
-);
+
+    // ==========================================
+    // DASHBOARD PRACTITIONER
+    // ==========================================
+    if (role === "practitioner") {
+      const [todayCount, pending, patients, todayList] =
+        await Promise.all([
+          // Nombre de rendez-vous aujourd'hui
+          pool.query(
+            `SELECT COUNT(*)::int AS count
+             FROM appointments
+             WHERE practitioner_id = $1
+             AND appointment_date = CURRENT_DATE
+             AND status <> 'cancelled'`,
+            [id]
+          ),
+
+          // Nombre de rendez-vous en attente
+          pool.query(
+            `SELECT COUNT(*)::int AS count
+             FROM appointments
+             WHERE practitioner_id = $1
+             AND status = 'pending'`,
+            [id]
+          ),
+
+          // Nombre de patients suivis
+          pool.query(
+            `SELECT COUNT(DISTINCT patient_id)::int AS count
+             FROM appointments
+             WHERE practitioner_id = $1`,
+            [id]
+          ),
+
+          // Agenda du jour
+          pool.query(
+            `SELECT
+                a.id,
+                a.appointment_date,
+                a.appointment_time,
+                a.reason,
+                a.type,
+                a.status,
+                pr.specialty AS specialty,
+                u.full_name AS patient_name,
+                c.nom AS clinique_nom,
+                c.ville AS clinique_ville
+             FROM appointments a
+             JOIN users u ON u.id = a.patient_id
+             JOIN users pr ON pr.id = a.practitioner_id
+             LEFT JOIN cliniques c ON c.id = a.clinique_id
+             WHERE a.practitioner_id = $1
+             AND a.appointment_date = CURRENT_DATE
+             AND a.status <> 'cancelled'
+             ORDER BY a.appointment_time`,
+            [id]
+          ),
+        ]);
+
+      return res.json({
+        role: "practitioner",
+
+        stats: {
+          today_appointments: todayCount.rows[0].count,
+          pending_appointments: pending.rows[0].count,
+          total_patients: patients.rows[0].count,
+        },
+
+        today: todayList.rows,
+      });
+    }
+
+    // ==========================================
+    // AUTRES RÔLES
+    // ==========================================
+    return res.status(403).json({
+      error: "Tableau de bord non disponible pour ce rôle",
+    });
+
+  } catch (err) {
+    console.error("Erreur Dashboard:", err);
+
+    return res.status(500).json({
+      error: "Erreur serveur",
+    });
+  }
+});
 
 export default router;

@@ -54,6 +54,8 @@ export default function BookAppointment() {
       setDate('');
       setTime('');
       setReason('');
+      setSuccess(true);
+      setTimeout(() => navigate('/app/appointments'), 1500);
     } catch (err) {
       setMessage('❌ ' + err.message);
     } finally {
